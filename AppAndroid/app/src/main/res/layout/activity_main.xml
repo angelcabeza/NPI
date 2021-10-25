@@ -15,7 +15,8 @@
         android:translationY="100px"
         android:visibility="visible"
         tools:layout_editor_absoluteX="79dp"
-        tools:layout_editor_absoluteY="127dp" />
+        tools:layout_editor_absoluteY="127dp"
+        tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/irSitios"
@@ -29,4 +30,15 @@
         app:layout_constraintStart_toStartOf="@+id/irClases"
         app:layout_constraintTop_toBottomOf="@+id/irClases"
         tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/permiso_ubication"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Permisos de Ubicacion"
+        android:layout_marginTop="100px"
+        android:padding="100px"
+        android:layout_gravity="center"
+        tools:ignore="MissingConstraints" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

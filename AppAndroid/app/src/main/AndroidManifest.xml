@@ -42,7 +42,7 @@
         <activity
             android:name=".MapsActivity"
             android:exported="true"
-            android:label="@string/title_activity_maps" />
+            android:label="Mapa interactivo" />
         <activity
             android:name=".clasesActivity"
             android:exported="true"
