@@ -3,12 +3,20 @@ package com.example.ugr_ubicate
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.Log
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Transformations.map
+import androidx.loader.content.AsyncTaskLoader
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -19,59 +27,87 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.ugr_ubicate.databinding.ActivityMapsBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.common.io.Files.map
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var mMap: GoogleMap
+    ///
+    private lateinit var map: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    ///
 
+    private lateinit var supportMapFragment: SupportMapFragment
+
+    private lateinit var spType : Spinner
+    private lateinit var btFind : Button
+
+    ///
     private var latitud_usuario: Double = 0.0
     private var longitud_usuario: Double = 0.0
 
-    val REQUEST_LOC_PERM_CODE = 100
+    val REQUEST_PERMISSION_CODE = 100
+    ///
 
+
+    // Creacion del objeto
     override fun onCreate(savedInstanceState: Bundle?) {
+        ///
         super.onCreate(savedInstanceState)
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        ///
+
+        spType = findViewById(R.id.sp_type)
+        btFind = findViewById(R.id.bt_find)
+
+        supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
+
+        val placeTypeList = arrayOf<String>("cajero automatico", "banco", "hospital", "teatro", "bar")
+        val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
+
+        spType.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, placeNameList)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         obtenerUltimaUbicacion()
 
+        btFind.setOnClickListener{
+            var i : Int = spType.selectedItemPosition
+
+            var url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
+                    "?location=" + latitud_usuario + "," + longitud_usuario + // Posicion usuario
+                    "&radius=5000" + // radio de busqueda de sitios cercanos
+                    "&types=" + placeTypeList[i] + // tipo de sitio
+                    "&sensor=true" + // sensor
+                    "&key=" + resources.getString(R.string.google_maps_key) // Google maps key
+
+            // Descargar JSON
+            PlaceTask().execute(url)
+
+        }
+
+
     }
 
-    // Function to check and request permission.
-    private fun checkPermission(permission: String, requestCode: Int) {
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED) {
-            // Requesting the permission
-            ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-        } else {
-            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show()
+    private class PlaceTask() : AsyncTask<String, Int, String>() {
+        override fun doInBackground(vararg p0: String?): String {
+            var data : String = downloadUrl(p0[0])
+
+        }
+
+        private fun downloadUrl(s: String?): String {
+
         }
     }
 
+
+    // Ver la ultima ubicacion del ususario
     private fun obtenerUltimaUbicacion() {
-        // Solicitar permiso
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            solicitarPermisoUbicacion()
-        }
+        solicitarPermisoUbicacionPrecisa()
 
-        // Si deniega el permiso no hacemos nada
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -88,30 +124,42 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (location != null) {
                     latitud_usuario = location.latitude
                     longitud_usuario = location.longitude
+
+                    // Actualizar el mapa
+                    supportMapFragment.getMapAsync(OnMapReadyCallback {
+                        fun OnMapReady(googleMap: GoogleMap){
+                            map = googleMap
+                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitud_usuario, longitud_usuario),
+                                10F
+                            ))
+                        }
+                    })
                 }
             }
     }
 
-    fun solicitarPermisoUbicacion(){
+    // Comprobar y solicitar el permiso de ubicacion precisa
+    fun solicitarPermisoUbicacionPrecisa(){
         if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED){
 
             Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
         }
         else{
             ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOC_PERM_CODE)
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_PERMISSION_CODE)
         }
     }
 
+    // Solicitar permisos
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (REQUEST_LOC_PERM_CODE == requestCode){
+        if (REQUEST_PERMISSION_CODE == requestCode){
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
             }
@@ -131,12 +179,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        map = googleMap
 
         // Add a marker in Sydney and move the camera
         val marcador = LatLng(37.197282, -3.624350)
-        mMap.addMarker(MarkerOptions().position(marcador).title("ETSIIT"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
+        map.addMarker(MarkerOptions().position(marcador).title("ETSIIT"))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
 
         activarUbicacionEnMapa()
     }
@@ -150,8 +198,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            return
+            solicitarPermisoUbicacionPrecisa()
         }
-        mMap.setMyLocationEnabled(true)
+        map.setMyLocationEnabled(true)
     }
 }
