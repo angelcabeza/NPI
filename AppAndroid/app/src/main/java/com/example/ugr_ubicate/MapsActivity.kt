@@ -29,6 +29,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitud_usuario: Double = 0.0
     private var longitud_usuario: Double = 0.0
 
+    val REQUEST_LOC_PERM_CODE = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +59,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun obtenerUltimaUbicacion() {
+        // Solicitar permiso
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            solicitarPermisoUbicacion()
+        }
+
+        // Si deniega el permiso no hacemos nada
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -76,6 +90,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     longitud_usuario = location.longitude
                 }
             }
+    }
+
+    fun solicitarPermisoUbicacion(){
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED){
+
+            Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
+        }
+        else{
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOC_PERM_CODE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (REQUEST_LOC_PERM_CODE == requestCode){
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
+            }
+            else{
+                Toast.makeText(this, "Permiso denegado", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     /**
