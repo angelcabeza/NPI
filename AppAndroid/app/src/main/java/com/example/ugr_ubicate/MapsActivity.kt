@@ -8,6 +8,7 @@ import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
@@ -51,6 +52,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitudUsuario: Double = 0.0
     private var longitudUsuario: Double = 0.0
 
+    private val radioBusqueda : Int = 3000
+
     private val REQUEST_PERMISSION_CODE = 100
     ///
 
@@ -59,6 +62,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         ///
         super.onCreate(savedInstanceState)
+
+        solicitarPermisoInternet()
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -71,10 +76,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
         //val placeTypeList = arrayOf<String>("cajero automatico", "banco", "hospital", "teatro", "bar")
-        //val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
+        val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
 
         val placeTypeList = arrayOf<String>("atm", "bank", "hospital", "movie_theater", "restaurant")
-        val placeNameList = arrayOf<String>("ATM", "Bank", "Hospital", "Movie Theater", "Restaurant")
+        //val placeNameList = arrayOf<String>("ATM", "Bank", "Hospital", "Movie Theater", "Restaurant")
 
         spType.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, placeNameList)
 
@@ -82,22 +87,37 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         obtenerUltimaUbicacion()
 
+        Log.e("onMapReady", "no se ve")
+
         btFind.setOnClickListener{
             val i : Int = spType.selectedItemPosition
 
-            val url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
+            /*val url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
                     "?location=" + latitudUsuario + "," + longitudUsuario + // Posicion usuario
                     "&radius=5000" + // radio de busqueda de sitios cercanos
-                    "&types=" + placeTypeList[i] + // tipo de sitio
+                    "&type=" + placeTypeList[i] + // tipo de sitio
                     "&sensor=true" + // sensor
-                    "&key=" + resources.getString(R.string.google_maps_key) // Google maps key
+                    "&key=" + resources.getString(R.string.google_maps_key) // Google maps key*/
+
+            val url : String = "http://overpass-api.de/api/interpreter?data=<query type=\"node\"><around " +
+                    "lat='" +  latitudUsuario + "' lon='" + longitudUsuario +
+                    "' radius='" + radioBusqueda +
+                    "'/><has-kv k=\"amenity\" v=\"" + placeTypeList[i] +
+                    "\"/></query><print />"
 
             // Descargar JSON
             PlaceTask().execute(url)
 
         }
 
+    }
 
+    private fun solicitarPermisoInternet() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET),
+                REQUEST_PERMISSION_CODE)
+        }
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -157,7 +177,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             var obj : JSONObject? = null
 
             try{
-                obj = JSONObject(p0[0])
+                //obj = JSONObject(p0[0])
+                obj = JSONObject(XML.toJSONObject(p0[0]))
 
                 mapList = jsonParser.parseResult(obj)
 
@@ -188,6 +209,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     options.title(nombre)
                     map.addMarker(options)
 
+                    Log.e("Marker", latLng.toString())
+
                     i++
                 }
             }
@@ -200,32 +223,41 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun obtenerUltimaUbicacion() {
         solicitarPermisoUbicacionPrecisa()
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }*/
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
         ) {
             return
         }
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location : Location? ->
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? ->
                 // Got last known location. In some rare situations this can be null.
                 if (location != null) {
                     latitudUsuario = location.latitude
                     longitudUsuario = location.longitude
 
+                    Log.e("Ubicacion", "lat: " + latitudUsuario + " long: " + longitudUsuario)
+
                     // Actualizar el mapa
-                    supportMapFragment.getMapAsync(OnMapReadyCallback {
+                    /*supportMapFragment.getMapAsync(OnMapReadyCallback() {
                         fun OnMapReady(googleMap: GoogleMap){
                             map = googleMap
-                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitudUsuario, longitudUsuario),
-                                10F
-                            ))
+                            Log.e("onMapReady", "no se ve 1")
+
+                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                                LatLng(latitudUsuario, longitudUsuario), 17.0F)
+                            )
                         }
-                    })
+                    })*/
+                    supportMapFragment.getMapAsync(this)
+
                 }
             }
     }
@@ -233,12 +265,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     // Comprobar y solicitar el permiso de ubicacion precisa
     fun solicitarPermisoUbicacionPrecisa(){
         if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) ==
+                Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED){
 
-            Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
-        }
-        else{
             ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_PERMISSION_CODE)
         }
@@ -252,10 +281,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (REQUEST_PERMISSION_CODE == requestCode){
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(this, "Permiso concedido", Toast.LENGTH_LONG).show()
-            }
-            else{
+            if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED){
                 Toast.makeText(this, "Permiso denegado", Toast.LENGTH_LONG).show()
             }
         }
@@ -279,16 +305,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
 
         activarUbicacionEnMapa()
+
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+            LatLng(latitudUsuario, longitudUsuario), 17.0F)
+        )
     }
 
     private fun activarUbicacionEnMapa() {
-        if (ActivityCompat.checkSelfPermission(
+        /*if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            solicitarPermisoUbicacionPrecisa()
+        }*/
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
         ) {
             solicitarPermisoUbicacionPrecisa()
         }
