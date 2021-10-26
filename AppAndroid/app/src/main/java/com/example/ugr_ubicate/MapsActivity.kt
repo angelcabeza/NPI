@@ -26,7 +26,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import org.json.JSONException
 import org.json.JSONObject
-import org.json.XML
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
@@ -53,7 +52,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitudUsuario: Double = 0.0
     private var longitudUsuario: Double = 0.0
 
-    private val radioBusqueda : Int = 3000
+    private val radioBusqueda : Int = 1000
 
     private val REQUEST_PERMISSION_CODE = 100
     ///
@@ -88,8 +87,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         obtenerUltimaUbicacion()
 
-        Log.e("onMapReady", "no se ve")
-
         btFind.setOnClickListener{
             val i : Int = spType.selectedItemPosition
 
@@ -100,16 +97,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     "&sensor=true" + // sensor
                     "&key=" + resources.getString(R.string.google_maps_key) // Google maps key*/
 
-            val url : String = "http://overpass-api.de/api/interpreter?data=<query type=\"node\"><around " +
-                    "lat='" +  latitudUsuario + "' lon='" + longitudUsuario +
-                    "' radius='" + radioBusqueda +
-                    "'/><has-kv k=\"amenity\" v=\"" + placeTypeList[i] +
-                    "\"/></query><print />"
+            val url : String = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];nwr(around:" +
+                    radioBusqueda + ","+
+                    latitudUsuario + "," +
+                    longitudUsuario + "" +
+                    ")[%22amenity%22=%22" +
+                    placeTypeList[i] + "%22];out%20tags%20center;"
+
+            Log.e("URL", url)
+
+            //aniadirMarcadores(url)
 
             // Descargar JSON
             PlaceTask().execute(url)
 
         }
+
+    }
+
+    private fun aniadirMarcadores(url: String) {
+        val apiResponse = URL(url).readText()
 
     }
 
@@ -153,10 +160,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             val builder : StringBuilder = java.lang.StringBuilder()
 
-            var line : String = ""
+            var line : String? = ""
 
-            while ( (reader.readLine().also { line = it }) != null ){
+            line = reader.readLine()
+
+            while ( line != null ){
                 builder.append(line)
+
+                line = reader.readLine()
             }
 
             val data : String = builder.toString()
@@ -178,8 +189,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             var obj : JSONObject? = null
 
             try{
-                //obj = JSONObject(p0[0])
-                obj = XML.toJSONObject(p0[0])
+                obj = JSONObject(p0[0])
 
                 mapList = jsonParser.parseResult(obj)
 
@@ -209,8 +219,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     options.position(latLng)
                     options.title(nombre)
                     map.addMarker(options)
-
-                    Log.e("Marker", latLng.toString())
 
                     i++
                 }
@@ -243,8 +251,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (location != null) {
                     latitudUsuario = location.latitude
                     longitudUsuario = location.longitude
-
-                    Log.e("Ubicacion", "lat: " + latitudUsuario + " long: " + longitudUsuario)
 
                     // Actualizar el mapa
                     /*supportMapFragment.getMapAsync(OnMapReadyCallback() {

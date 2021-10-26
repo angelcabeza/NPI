@@ -1,5 +1,6 @@
 package com.example.ugr_ubicate
 
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -9,11 +10,16 @@ public class JsonParser {
         var dataList : HashMap<String, String> = HashMap()
 
         try {
-            var name : String = obj.get("name") as String
+            //var name : String = obj.get("name") as String
+            var name : String = obj.getJSONObject("tags").get("name") as String
 
-            var latitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lat") as String
+            //var latitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lat") as String
+            var latitud : String = obj.getJSONObject("center").get("lat") as String
 
-            var longitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lng") as String
+            //var longitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lng") as String
+            var longitud : String = obj.getJSONObject("center").get("lon") as String
+
+            Log.e("name", name)
 
             dataList.put("name", name)
             dataList.put("lat", latitud)
@@ -53,7 +59,7 @@ public class JsonParser {
         var jsonArray : JSONArray? = null
 
         try {
-            jsonArray = obj.getJSONArray("results")
+            jsonArray = obj.getJSONArray("elements")
         } catch (e : JSONException){
             e.printStackTrace()
         }
