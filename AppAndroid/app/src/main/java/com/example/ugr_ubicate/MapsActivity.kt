@@ -1,33 +1,28 @@
 package com.example.ugr_ubicate
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.AsyncTask
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
-import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Transformations.map
-import androidx.loader.content.AsyncTaskLoader
-
+import com.example.ugr_ubicate.databinding.ActivityMapsBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.example.ugr_ubicate.databinding.ActivityMapsBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.common.io.Files.map
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -53,10 +48,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btFind : Button
 
     ///
-    private var latitud_usuario: Double = 0.0
-    private var longitud_usuario: Double = 0.0
+    private var latitudUsuario: Double = 0.0
+    private var longitudUsuario: Double = 0.0
 
-    val REQUEST_PERMISSION_CODE = 100
+    private val REQUEST_PERMISSION_CODE = 100
     ///
 
 
@@ -75,8 +70,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
-        val placeTypeList = arrayOf<String>("cajero automatico", "banco", "hospital", "teatro", "bar")
-        val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
+        //val placeTypeList = arrayOf<String>("cajero automatico", "banco", "hospital", "teatro", "bar")
+        //val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
+
+        val placeTypeList = arrayOf<String>("atm", "bank", "hospital", "movie_theater", "restaurant")
+        val placeNameList = arrayOf<String>("ATM", "Bank", "Hospital", "Movie Theater", "Restaurant")
 
         spType.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, placeNameList)
 
@@ -85,10 +83,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         obtenerUltimaUbicacion()
 
         btFind.setOnClickListener{
-            var i : Int = spType.selectedItemPosition
+            val i : Int = spType.selectedItemPosition
 
-            var url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
-                    "?location=" + latitud_usuario + "," + longitud_usuario + // Posicion usuario
+            val url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
+                    "?location=" + latitudUsuario + "," + longitudUsuario + // Posicion usuario
                     "&radius=5000" + // radio de busqueda de sitios cercanos
                     "&types=" + placeTypeList[i] + // tipo de sitio
                     "&sensor=true" + // sensor
@@ -102,6 +100,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
+    @SuppressLint("StaticFieldLeak")
     private inner class PlaceTask() : AsyncTask<String, Int, String>() {
         override fun doInBackground(vararg p0: String?): String? {
             var data : String? = null
@@ -121,17 +120,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         @Throws(IOException::class)
         private fun downloadUrl(s: String?): String {
-            var url : URL = URL(s)
+            val url: URL = URL(s)
 
-            var connection : HttpURLConnection = url.openConnection() as HttpURLConnection
+            val connection : HttpURLConnection = url.openConnection() as HttpURLConnection
 
             connection.connect()
 
-            var stream : InputStream = connection.inputStream
+            val stream : InputStream = connection.inputStream
 
-            var reader : BufferedReader = BufferedReader(InputStreamReader(stream))
+            val reader : BufferedReader = BufferedReader(InputStreamReader(stream))
 
-            var builder : StringBuilder = java.lang.StringBuilder()
+            val builder : StringBuilder = java.lang.StringBuilder()
 
             var line : String = ""
 
@@ -139,17 +138,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 builder.append(line)
             }
 
-            var data : String = builder.toString()
+            val data : String = builder.toString()
 
             reader.close()
 
             return data
         }
+
     }
 
+    @SuppressLint("StaticFieldLeak")
     private inner class ParserTask : AsyncTask<String, Int, List<HashMap<String, String>>>() {
         override fun doInBackground(vararg p0: String?): List<HashMap<String, String>>? {
-            var jsonParser : JsonParser = JsonParser()
+            val jsonParser : JsonParser = JsonParser()
 
             var mapList : List<HashMap<String, String>>? = null
 
@@ -174,15 +175,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             if (result != null) {
                 while(i < result.size){
-                    var hashMapList : HashMap<String, String> = result.get(i)
+                    val hashMapList : HashMap<String, String> = result.get(i)
 
-                    var lat : Double = parseDouble(hashMapList.get("lat"))
-                    var lng : Double = parseDouble(hashMapList.get("lng"))
-                    var nombre : String? = hashMapList.get("name")
+                    val lat : Double = parseDouble(hashMapList.get("lat"))
+                    val lng : Double = parseDouble(hashMapList.get("lng"))
+                    val nombre : String? = hashMapList.get("name")
 
-                    var latLng : LatLng = LatLng(lat, lng)
+                    val latLng : LatLng = LatLng(lat, lng)
 
-                    var options : MarkerOptions = MarkerOptions()
+                    val options : MarkerOptions = MarkerOptions()
                     options.position(latLng)
                     options.title(nombre)
                     map.addMarker(options)
@@ -213,14 +214,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .addOnSuccessListener { location : Location? ->
                 // Got last known location. In some rare situations this can be null.
                 if (location != null) {
-                    latitud_usuario = location.latitude
-                    longitud_usuario = location.longitude
+                    latitudUsuario = location.latitude
+                    longitudUsuario = location.longitude
 
                     // Actualizar el mapa
                     supportMapFragment.getMapAsync(OnMapReadyCallback {
                         fun OnMapReady(googleMap: GoogleMap){
                             map = googleMap
-                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitud_usuario, longitud_usuario),
+                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitudUsuario, longitudUsuario),
                                 10F
                             ))
                         }
@@ -291,6 +292,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ) {
             solicitarPermisoUbicacionPrecisa()
         }
-        map.setMyLocationEnabled(true)
+
+        map.isMyLocationEnabled = true
     }
 }
