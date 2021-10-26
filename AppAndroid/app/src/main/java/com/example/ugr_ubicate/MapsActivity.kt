@@ -28,8 +28,18 @@ import com.example.ugr_ubicate.databinding.ActivityMapsBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.common.io.Files.map
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.lang.Double.parseDouble
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+    // Siguiendo este tutorial: https://youtu.be/pjFcJ6EB8Dg
 
     ///
     private lateinit var map: GoogleMap
@@ -92,15 +102,96 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
-    private class PlaceTask() : AsyncTask<String, Int, String>() {
-        override fun doInBackground(vararg p0: String?): String {
-            var data : String = downloadUrl(p0[0])
+    private inner class PlaceTask() : AsyncTask<String, Int, String>() {
+        override fun doInBackground(vararg p0: String?): String? {
+            var data : String? = null
 
+            try {
+                data = downloadUrl(p0[0])
+            } catch (e : IOException){
+                e.printStackTrace()
+            }
+
+            return data
         }
 
+        override fun onPostExecute(result: String?) {
+            ParserTask().execute(result)
+        }
+
+        @Throws(IOException::class)
         private fun downloadUrl(s: String?): String {
+            var url : URL = URL(s)
 
+            var connection : HttpURLConnection = url.openConnection() as HttpURLConnection
+
+            connection.connect()
+
+            var stream : InputStream = connection.inputStream
+
+            var reader : BufferedReader = BufferedReader(InputStreamReader(stream))
+
+            var builder : StringBuilder = java.lang.StringBuilder()
+
+            var line : String = ""
+
+            while ( (reader.readLine().also { line = it }) != null ){
+                builder.append(line)
+            }
+
+            var data : String = builder.toString()
+
+            reader.close()
+
+            return data
         }
+    }
+
+    private inner class ParserTask : AsyncTask<String, Int, List<HashMap<String, String>>>() {
+        override fun doInBackground(vararg p0: String?): List<HashMap<String, String>>? {
+            var jsonParser : JsonParser = JsonParser()
+
+            var mapList : List<HashMap<String, String>>? = null
+
+            var obj : JSONObject? = null
+
+            try{
+                obj = JSONObject(p0[0])
+
+                mapList = jsonParser.parseResult(obj)
+
+            } catch (e : JSONException){
+                e.printStackTrace()
+            }
+
+            return mapList
+        }
+
+        override fun onPostExecute(result: List<HashMap<String, String>>?) {
+            map.clear()
+
+            var i : Int = 0
+
+            if (result != null) {
+                while(i < result.size){
+                    var hashMapList : HashMap<String, String> = result.get(i)
+
+                    var lat : Double = parseDouble(hashMapList.get("lat"))
+                    var lng : Double = parseDouble(hashMapList.get("lng"))
+                    var nombre : String? = hashMapList.get("name")
+
+                    var latLng : LatLng = LatLng(lat, lng)
+
+                    var options : MarkerOptions = MarkerOptions()
+                    options.position(latLng)
+                    options.title(nombre)
+                    map.addMarker(options)
+
+                    i++
+                }
+            }
+        }
+
     }
 
 
