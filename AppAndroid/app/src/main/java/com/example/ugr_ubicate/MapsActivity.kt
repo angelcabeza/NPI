@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import org.json.JSONException
 import org.json.JSONObject
+import org.json.XML
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
@@ -178,7 +179,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             try{
                 //obj = JSONObject(p0[0])
-                obj = JSONObject(XML.toJSONObject(p0[0]))
+                obj = XML.toJSONObject(p0[0])
 
                 mapList = jsonParser.parseResult(obj)
 
