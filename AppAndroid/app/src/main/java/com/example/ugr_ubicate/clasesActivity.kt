@@ -2,6 +2,7 @@ package com.example.ugr_ubicate
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -18,13 +19,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.budiyev.android.codescanner.*
 
 class clasesActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var sensorManagerPodometro: SensorManager
     private lateinit var sensorManagerBrujula: SensorManager
+    private lateinit var sensorManagerAcelerometro: SensorManager
     private lateinit var sensorPodometro: Sensor
     private lateinit var sensorBrujula: Sensor
+    private lateinit var sensorAcelerometro: Sensor
     private var previousTotalSteps = 0f
     private var totalSteps = 0f
     private var currentSteps = 0
@@ -41,6 +45,16 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var cont = 0
     val ACTIVITY_RQ = 101
 
+
+    //Variable del gesto de agitación
+    private var lastUpdate: Long = 0
+    private var last_x =0f
+    private var last_y = 0f
+    private var last_z = 0f
+    private val SHAKE_THRESHOLD = 200
+    var agitacionDetectada = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_clases)
@@ -50,6 +64,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         textGiro = findViewById(R.id.textGiro)
         instrucciones.visibility = View.INVISIBLE
 
+
         val titulo = findViewById<TextView>(R.id.titulo)
         val ruta1 = findViewById<Button>(R.id.ruta1)
         ruta1.setOnClickListener{
@@ -57,21 +72,65 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             ruta1.visibility = View.INVISIBLE
             instrucciones.text = instruccionesRuta1[cont]
             instrucciones.visibility = View.VISIBLE
+
             sensorPodometro = sensorManagerPodometro.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
             sensorManagerPodometro?.registerListener(this, sensorPodometro, SensorManager.SENSOR_DELAY_FASTEST)
 
             sensorBrujula = sensorManagerBrujula.getDefaultSensor((Sensor.TYPE_ORIENTATION))
             sensorManagerBrujula?.registerListener(this, sensorBrujula, SensorManager.SENSOR_DELAY_NORMAL)
+
+            sensorAcelerometro = sensorManagerAcelerometro.getDefaultSensor((Sensor.TYPE_LINEAR_ACCELERATION))
+            sensorManagerAcelerometro?.registerListener(this, sensorAcelerometro, SensorManager.SENSOR_DELAY_NORMAL)
+
         }
 
         checkForPermission(android.Manifest.permission.ACTIVITY_RECOGNITION,"activity",ACTIVITY_RQ)
 
-        // Declaro el podómetro
+
+        // Declaro los sensores
         sensorManagerPodometro = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensorManagerBrujula = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorManagerAcelerometro = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
+
+        //evento de acelerometro lineal (desprecia la gravedad, el normal siempre pilla la gravedad)
+        if (event!!.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            //Se obtienen los valores nuevos
+
+            //Se obtienen los valores nuevos
+            val new_x = event!!.values[0]
+            val new_y = event!!.values[1]
+            val new_z = event!!.values[2]
+
+            // Se obtiene la hora actual
+
+            // Se obtiene la hora actual
+            val horaActual = System.currentTimeMillis()
+
+            // Realiza las comprobaciones solo si han pasado 400 ms
+
+            // Realiza las comprobaciones solo si han pasado 400 ms
+            if (horaActual - lastUpdate >= 400) {
+                val diferencia: Long = horaActual - lastUpdate
+                // Modifica la hora de comparacion y calcula la velocidad
+                lastUpdate = horaActual
+                val velocidad: Float = Math.abs(new_y - last_y) / diferencia * 10000
+
+                // Si la velocidad es suficiente y el movil no se ha girado en el eje X
+                if (velocidad >= SHAKE_THRESHOLD && new_x > -2 && new_x <= 1) {
+                    agitacionDetectada = true
+                }
+
+                //Actualiza las coordenadas
+                last_x = new_x
+                last_y = new_y
+                last_z = new_z
+            }
+        }
+
         if (event!!.sensor.type == Sensor.TYPE_STEP_DETECTOR){
             currentSteps +=1
             debug.text = currentSteps.toString()
@@ -86,7 +145,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             textGiro.text = giro.toString()
         }
 
-        ruta1()
+        if (!agitacionDetectada)
+            ruta1()
+        else
+            estaPerdido()
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
@@ -97,6 +159,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         super.onStop()
         sensorManagerPodometro.unregisterListener(this,sensorPodometro)
         sensorManagerBrujula.unregisterListener(this,sensorBrujula)
+        sensorManagerAcelerometro.unregisterListener(this,sensorAcelerometro)
     }
 
 
@@ -117,6 +180,15 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             terceraInstruccion = true
         }
     }
+
+    private fun estaPerdido(){
+        agitacionDetectada = false
+        instrucciones.text = "Si se ha perdido busca un código QR y le indicaremos la ruta\n desde ahí"
+        // Espero 5 segundos para que el usuario lea lo que tiene que hacer
+        val intent = Intent(this, qrActivity::class.java)
+        startActivity(intent)
+    }
+
 
 
     // MANAGE PERMISSION
