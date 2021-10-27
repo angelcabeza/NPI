@@ -6,24 +6,84 @@ import org.json.JSONException
 import org.json.JSONObject
 
 public class JsonParser {
+    val amenitiesStreet : Array<String> = arrayOf("bank", "hospital", "bar")
+
     private fun parseJsonObject (obj : JSONObject) : HashMap<String, String> {
         var dataList : HashMap<String, String> = HashMap()
 
+        /*
+        Bank:
+            lat
+            lon
+            tags
+                name
+                addr:street (no en todos)
+        Hospital:
+            center
+                lat
+                lon
+            tags
+                name
+                addr:street (no en todos)
+                healthcare (no en todos)
+        Bar:
+            lat
+            lon
+            tags
+                name
+                addr:street (no en todos)
+        Universidad:
+            center
+                lat
+                lon
+            tags
+                name
+
+         */
+
         try {
             //var name : String = obj.get("name") as String
-            var name : String = obj.getJSONObject("tags").get("name") as String
-
-            //var latitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lat") as String
-            var latitud : String = obj.getJSONObject("center").get("lat") as String
-
             //var longitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lng") as String
-            var longitud : String = obj.getJSONObject("center").get("lon") as String
+            //var longitud : String = obj.getJSONObject("center").get("lon") as String
+            //var latitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lat") as String
+            //var latitud : String = obj.getJSONObject("center").get("lat") as String
 
-            Log.e("name", name)
+            var name : String? = obj.getJSONObject("tags").get("name") as String
 
-            dataList.put("name", name)
-            dataList.put("lat", latitud)
-            dataList.put("lng", longitud)
+            var amenity : String? = obj.getJSONObject("tags").get("amenity") as String
+
+            var street : String? = null
+            if (amenity in amenitiesStreet){
+                street = obj.getJSONObject("tags").get("addr:street") as String
+
+                if (street == null){
+                    name = null
+                }
+            }
+
+            var healthcare : String? = null
+            if (amenity == "hospital"){
+                healthcare = obj.getJSONObject("tags").get("healthcare") as String
+
+                if (healthcare == null){
+                    name = null
+                }
+            }
+
+            var latitud : String? = obj.get("lat") as String
+            var longitud : String? = obj.get("lon") as String
+
+            if (latitud == null || longitud == null){
+                latitud = obj.getJSONObject("center").get("lat") as String
+                longitud = obj.getJSONObject("center").get("lon") as String
+            }
+
+
+            if (name != null && latitud != null && longitud != null) {
+                dataList.put("name", name)
+                dataList.put("lng", latitud)
+                dataList.put("lng", longitud)
+            }
 
         } catch (e : JSONException){
             e.printStackTrace()

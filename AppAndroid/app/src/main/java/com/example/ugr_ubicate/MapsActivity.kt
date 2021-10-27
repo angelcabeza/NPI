@@ -2,13 +2,12 @@ package com.example.ugr_ubicate
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.AsyncTask
-import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
+import android.os.*
 import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
@@ -33,6 +32,12 @@ import java.io.InputStreamReader
 import java.lang.Double.parseDouble
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.net.ssl.HttpsURLConnection
+import com.google.android.gms.maps.model.CameraPosition
+
+import com.google.android.gms.maps.model.PolylineOptions
+import java.net.MalformedURLException
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     // Siguiendo este tutorial: https://youtu.be/pjFcJ6EB8Dg
@@ -48,6 +53,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var spType : Spinner
     private lateinit var btFind : Button
 
+    private var mainHandler : Handler = Handler()
+    private lateinit var progressDialog : ProgressDialog
+
     ///
     private var latitudUsuario: Double = 0.0
     private var longitudUsuario: Double = 0.0
@@ -56,6 +64,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val REQUEST_PERMISSION_CODE = 100
     ///
+
+    val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Campus Universitario")
+    val placeTypeList = arrayOf<String>("bank", "hospital", "bar", "university")
+
+    var i : Int = -1
 
 
     // Creacion del objeto
@@ -75,12 +88,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
-        //val placeTypeList = arrayOf<String>("cajero automatico", "banco", "hospital", "teatro", "bar")
-        val placeNameList = arrayOf<String>("Cajero automatico", "Banco", "Hospital", "Teatro", "Bar")
-
-        val placeTypeList = arrayOf<String>("atm", "bank", "hospital", "movie_theater", "restaurant")
-        //val placeNameList = arrayOf<String>("ATM", "Bank", "Hospital", "Movie Theater", "Restaurant")
-
         spType.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, placeNameList)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -88,44 +95,180 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         obtenerUltimaUbicacion()
 
         btFind.setOnClickListener{
-            val i : Int = spType.selectedItemPosition
+            i = spType.selectedItemPosition
 
             /*val url : String = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" + // Url
                     "?location=" + latitudUsuario + "," + longitudUsuario + // Posicion usuario
                     "&radius=5000" + // radio de busqueda de sitios cercanos
                     "&type=" + placeTypeList[i] + // tipo de sitio
                     "&sensor=true" + // sensor
-                    "&key=" + resources.getString(R.string.google_maps_key) // Google maps key*/
+                    "&key=" + resources.getString(R.string.google_maps_key) // Google maps key
 
             val url : String = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];nwr(around:" +
                     radioBusqueda + ","+
                     latitudUsuario + "," +
                     longitudUsuario + "" +
                     ")[%22amenity%22=%22" +
-                    placeTypeList[i] + "%22];out%20tags%20center;"
+                    placeTypeList[i] + "%22];out%20tags%20center;"*/
 
-            Log.e("URL", url)
+            //Log.e("URL", url)
 
-            //aniadirMarcadores(url)
+            //fetchJSONMarcadores(url)
 
             // Descargar JSON
-            PlaceTask().execute(url)
+            //PlaceTask().execute(url)
 
+            fetchData().start()
         }
 
     }
 
-    private fun aniadirMarcadores(url: String) {
-        val apiResponse = URL(url).readText()
+    inner class fetchData : Thread() {
+        var data : String = ""
 
+        override public fun run(){
+            mainHandler.post(Runnable {
+                progressDialog = ProgressDialog(this@MapsActivity)
+                progressDialog.setMessage("Leyendo datos")
+                progressDialog.setCancelable(false)
+                progressDialog.show()
+            })
+
+            val url_str : String = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];nwr(around:" +
+                    radioBusqueda + ","+
+                    latitudUsuario + "," +
+                    longitudUsuario + "" +
+                    ")[%22amenity%22=%22" +
+                    placeTypeList[i] + "%22];out%20tags%20center;"
+
+            Log.e("URL", url_str)
+
+            try{
+                var url : URL = URL(url_str)
+
+                var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
+
+                var inputStream : InputStream = httpsURLConnection.inputStream
+
+                var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
+
+                var line : String? = null
+
+                line = bufferedReader.readLine()
+
+                while ( line != null ){
+                    data = data + line
+
+                    line = bufferedReader.readLine()
+                }
+
+                if (! data.isEmpty()){
+                    val jsonParser : JsonParser = JsonParser()
+
+                    var obj : JSONObject = JSONObject(data)
+
+                    var mapList : List<HashMap<String, String>> = jsonParser.parseResult(obj)
+
+                    this@MapsActivity.runOnUiThread(Runnable {
+                        map.clear()
+                    })
+
+                    var j : Int = 0
+
+                    if (mapList != null) {
+                        while(j < mapList.size){
+                            val hashMapList : HashMap<String, String> = mapList.get(j)
+
+                            val lat : Double = parseDouble(hashMapList.get("lat"))
+                            val lng : Double = parseDouble(hashMapList.get("lng"))
+                            val nombre : String? = hashMapList.get("name")
+
+                            val latLng : LatLng = LatLng(lat, lng)
+
+                            val options : MarkerOptions = MarkerOptions()
+                            options.position(latLng)
+                            options.title(nombre)
+
+                            this@MapsActivity.runOnUiThread(Runnable {
+                                map.addMarker(options)
+                            })
+
+                            i++
+                        }
+                    }
+                }
+            } catch (e : MalformedURLException){
+                e.printStackTrace()
+            } catch (e : IOException){
+                e.printStackTrace()
+            } catch (e : JSONException){
+                e.printStackTrace()
+            }
+
+            mainHandler.post(Runnable {
+                if(progressDialog.isShowing){
+                        progressDialog.dismiss()
+                }
+            })
+        }
     }
 
-    private fun solicitarPermisoInternet() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET),
-                REQUEST_PERMISSION_CODE)
+    private fun fetchJSON(url: String): JSONObject {
+        Log.e("Download JSON", url)
+        val apiResponse : String = URL(url).readText()
+        Log.e("Download JSON", "finalizado")
+
+        val obj : JSONObject = JSONObject(apiResponse)
+
+        return obj
+    }
+
+    private fun obtenerMarcadores(obj : JSONObject): List<HashMap<String, String>>? {
+        val jsonParser : JsonParser = JsonParser()
+
+        var mapList : List<HashMap<String, String>>? = null
+
+        try{
+            mapList = jsonParser.parseResult(obj)
+        } catch (e : JSONException){
+            e.printStackTrace()
+            Log.e("JSON", "Error en parsing")
         }
+
+        return mapList
+    }
+
+    private fun aniadirMarcadores(resultados: List<HashMap<String, String>>?) {
+        map.clear()
+
+        var i : Int = 0
+
+        if (resultados != null) {
+            while(i < resultados.size){
+                val hashMapList : HashMap<String, String> = resultados.get(i)
+
+                val lat : Double = parseDouble(hashMapList.get("lat"))
+                val lng : Double = parseDouble(hashMapList.get("lng"))
+                val nombre : String? = hashMapList.get("name")
+
+                val latLng : LatLng = LatLng(lat, lng)
+
+                val options : MarkerOptions = MarkerOptions()
+                options.position(latLng)
+                options.title(nombre)
+                map.addMarker(options)
+
+                i++
+            }
+        }
+    }
+
+    private fun fetchJSONMarcadores (url : String){
+        var jsonObject : JSONObject = fetchJSON(url)
+
+        var listaMarcadores : List<HashMap<String, String>>? = obtenerMarcadores(jsonObject)
+
+        aniadirMarcadores(listaMarcadores)
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -269,6 +412,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
     }
 
+    // Comprobar y solicitar el permiso de Internet
+    private fun solicitarPermisoInternet() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET),
+                REQUEST_PERMISSION_CODE)
+        }
+    }
+
     // Comprobar y solicitar el permiso de ubicacion precisa
     fun solicitarPermisoUbicacionPrecisa(){
         if (ActivityCompat.checkSelfPermission(this,
@@ -282,9 +434,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     // Solicitar permisos
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>,
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (REQUEST_PERMISSION_CODE == requestCode){
