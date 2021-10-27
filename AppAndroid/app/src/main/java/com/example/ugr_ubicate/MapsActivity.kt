@@ -60,12 +60,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitudUsuario: Double = 0.0
     private var longitudUsuario: Double = 0.0
 
-    private val radioBusqueda : Int = 1000
+    private val radioBusqueda : Int = 5000
 
     private val REQUEST_PERMISSION_CODE = 100
     ///
 
-    val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Campus Universitario")
+    val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
     val placeTypeList = arrayOf<String>("bank", "hospital", "bar", "university")
 
     var i : Int = -1
@@ -141,8 +141,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     ")[%22amenity%22=%22" +
                     placeTypeList[i] + "%22];out%20tags%20center;"
 
-            Log.e("URL", url_str)
-
             try{
                 var url : URL = URL(url_str)
 
@@ -167,7 +165,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     var obj : JSONObject = JSONObject(data)
 
-                    var mapList : List<HashMap<String, String>> = jsonParser.parseResult(obj)
+                    var mapList : List<HashMap<String, Object>> = jsonParser.parseResult(obj)
+
+                    Log.e("Tamanio mapa", mapList.size.toString())
 
                     this@MapsActivity.runOnUiThread(Runnable {
                         map.clear()
@@ -177,15 +177,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     if (mapList != null) {
                         while(j < mapList.size){
-                            val hashMapList : HashMap<String, String> = mapList.get(j)
+                            val hashMapList : HashMap<String, Object> = mapList.get(j)
 
-                            val lat : Double = parseDouble(hashMapList.get("lat"))
-                            val lng : Double = parseDouble(hashMapList.get("lng"))
-                            val nombre : String? = hashMapList.get("name")
+                            val lat : Double = hashMapList.get("lat") as Double
+                            val lng : Double = hashMapList.get("lon") as Double
+                            val nombre : String = hashMapList.get("name") as String
 
                             val latLng : LatLng = LatLng(lat, lng)
 
-                            val options : MarkerOptions = MarkerOptions()
+                            var options : MarkerOptions = MarkerOptions()
                             options.position(latLng)
                             options.title(nombre)
 
@@ -193,7 +193,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                 map.addMarker(options)
                             })
 
-                            i++
+                            j++
                         }
                     }
                 }
@@ -207,13 +207,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             mainHandler.post(Runnable {
                 if(progressDialog.isShowing){
-                        progressDialog.dismiss()
+                    progressDialog.dismiss()
                 }
             })
         }
     }
 
-    private fun fetchJSON(url: String): JSONObject {
+    /*private fun fetchJSON(url: String): JSONObject {
         Log.e("Download JSON", url)
         val apiResponse : String = URL(url).readText()
         Log.e("Download JSON", "finalizado")
@@ -223,10 +223,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         return obj
     }
 
-    private fun obtenerMarcadores(obj : JSONObject): List<HashMap<String, String>>? {
+    private fun obtenerMarcadores(obj : JSONObject): List<HashMap<String, Object>>? {
         val jsonParser : JsonParser = JsonParser()
 
-        var mapList : List<HashMap<String, String>>? = null
+        var mapList : List<HashMap<String, Object>>? = null
 
         try{
             mapList = jsonParser.parseResult(obj)
@@ -269,9 +269,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var listaMarcadores : List<HashMap<String, String>>? = obtenerMarcadores(jsonObject)
 
         aniadirMarcadores(listaMarcadores)
-    }
+    }*/
 
-    @SuppressLint("StaticFieldLeak")
+    /*@SuppressLint("StaticFieldLeak")
     private inner class PlaceTask() : AsyncTask<String, Int, String>() {
         override fun doInBackground(vararg p0: String?): String? {
             var data : String? = null
@@ -368,7 +368,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-    }
+    }*/
 
 
     // Ver la ultima ubicacion del ususario
