@@ -23,7 +23,7 @@
         android:layout_width="192dp"
         android:layout_height="63dp"
         android:layout_marginTop="8dp"
-        android:text="Ir a Sitios"
+        android:text="Buscar Sitios"
         android:translationX="100px"
         android:translationY="500px"
         app:layout_constraintEnd_toEndOf="@+id/irClases"

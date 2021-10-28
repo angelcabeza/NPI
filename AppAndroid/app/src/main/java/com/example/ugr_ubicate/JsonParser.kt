@@ -45,12 +45,6 @@ public class JsonParser {
          */
 
         try {
-            //var name : String = obj.get("name") as String
-            //var longitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lng") as String
-            //var longitud : String = obj.getJSONObject("center").get("lon") as String
-            //var latitud : String = obj.getJSONObject("geometry").getJSONObject("location").get("lat") as String
-            //var latitud : String = obj.getJSONObject("center").get("lat") as String
-
             var name : String? = obj.getJSONObject("tags").get("name") as String?
 
             var amenity : String? = obj.getJSONObject("tags").get("amenity") as String?
