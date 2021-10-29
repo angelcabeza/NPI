@@ -1,14 +1,15 @@
 package com.example.ugr_ubicate
 
 import android.Manifest
+import android.R.attr
+import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.*
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.Spinner
-import android.widget.Toast
+import android.view.Gravity
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.ugr_ubicate.databinding.ActivityMapsBinding
@@ -29,6 +30,16 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import android.view.LayoutInflater
+import android.R.attr.focusable
+
+import android.widget.PopupWindow
+
+
+
+
+
+
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -54,7 +65,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
     private val placeTypeList = arrayOf<String>("bank", "hospital", "bar", "university")
     private var currentPlace : Int = -1
+
     private var marcadoresList : List<HashMap<String, Object>>? = null
+    private var currentMarker : Int = -1
 
 
     // Creacion del objeto
@@ -85,7 +98,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             fetchData().start()
         }
-
     }
 
     inner class fetchData : Thread() {
@@ -127,7 +139,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     marcadoresList = jsonParser.parseResult(obj)
 
-                    actualizarMarcadoresMapa()
+                    //anidirTodosMarcadoresMapa()
+                    reiniciarMarcadoresMapa()
                 }
             } catch (e : MalformedURLException){
                 e.printStackTrace()
@@ -156,7 +169,69 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         return url_str
     }
 
-    private fun actualizarMarcadoresMapa() {
+    private fun reiniciarMarcadoresMapa(){
+        this@MapsActivity.runOnUiThread(Runnable {
+            map.clear()
+        })
+
+        if (marcadoresList != null) {
+            currentMarker = 0
+
+            val hashMarcadores: HashMap<String, Object> = marcadoresList!!.get(currentMarker)
+
+            val lat: Double = hashMarcadores.get("lat") as Double
+            val lng: Double = hashMarcadores.get("lon") as Double
+            val nombre: String = hashMarcadores.get("name") as String
+
+            val latLng: LatLng = LatLng(lat, lng)
+
+            var options: MarkerOptions = MarkerOptions()
+            options.position(latLng)
+            options.title(nombre)
+
+            this@MapsActivity.runOnUiThread(Runnable {
+                var marcadorAniadido = map.addMarker(options)
+                marcadorAniadido.showInfoWindow()
+
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(lat, lng), 13.0F)
+                )
+            })
+        }
+    }
+
+    private fun pasarSiguienteMarcador(){
+        this@MapsActivity.runOnUiThread(Runnable {
+            map.clear()
+        })
+
+        if (marcadoresList != null && (currentMarker + 1) < marcadoresList!!.size ) {
+            currentMarker = currentMarker + 1
+
+            val hashMarcadores: HashMap<String, Object> = marcadoresList!!.get(currentMarker)
+
+            val lat: Double = hashMarcadores.get("lat") as Double
+            val lng: Double = hashMarcadores.get("lon") as Double
+            val nombre: String = hashMarcadores.get("name") as String
+
+            val latLng: LatLng = LatLng(lat, lng)
+
+            var options: MarkerOptions = MarkerOptions()
+            options.position(latLng)
+            options.title(nombre)
+
+            this@MapsActivity.runOnUiThread(Runnable {
+                var marcadorAniadido = map.addMarker(options)
+                marcadorAniadido.showInfoWindow()
+
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(lat, lng), 13.0F)
+                )
+            })
+        }
+    }
+
+    private fun anidirTodosMarcadoresMapa() {
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
         })
@@ -184,8 +259,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 j++
             }
         }
+
+        if (latitudUsuario != null && longitudUsuario != null){
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                LatLng(latitudUsuario!!, longitudUsuario!!), 13.0F)
+            )
+        }
     }
 
+    /*private fun inicioVentanaSitios(view: View) {
+        // inflate the layout of the popup window
+        var inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        //var popupView: View = inflater.inflate(R.layout.activity_maps, null)
+        var popupView: View = binding.root
+
+        popUpSitios = PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT, true)
+
+        popUpSitios.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+    }*/
 
     // Ver la ultima ubicacion del ususario
     private fun obtenerUltimaUbicacion() {
@@ -257,10 +349,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         dataList.put("lon", -3.624350 as Object)
         dataList.put("name", "ETSIIT" as Object)
 
+        currentMarker = 0
+
         // Add a marker in ETSIIT and move the camera
         val marcador = LatLng(37.197282, -3.624350)
         map.addMarker(MarkerOptions().position(marcador).title("ETSIIT"))
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
 
         activarUbicacionEnMapa()
 
