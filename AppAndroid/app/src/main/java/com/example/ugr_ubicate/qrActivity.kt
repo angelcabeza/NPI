@@ -1,5 +1,6 @@
 package com.example.ugr_ubicate
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,7 @@ class qrActivity : AppCompatActivity() {
     private lateinit var scanner_view: CodeScannerView
     private lateinit var tv_textScannerView: TextView
     private var CAMERA_RQ = 101;
+    private lateinit var intentClases : Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +40,7 @@ class qrActivity : AppCompatActivity() {
 
         codeScanner()
 
+        intentClases = Intent(this, clasesActivity::class.java)
     }
 
     private fun codeScanner() {
@@ -51,7 +54,17 @@ class qrActivity : AppCompatActivity() {
 
             decodeCallback = DecodeCallback {
                 runOnUiThread {
+                    val extras = Bundle()
+                    if (it.text == "Escalera") {
+                        var estaEscalera = true
+                        extras.putString("ESTA_PERDIDO_ESCALERA","perdido_escalera")
+                    }else
+                        extras.putString("ESTA_PERDIDO_OTRO","perdido_otro")
+
                     tv_textScannerView.text = it.text
+
+                    intent.putExtras(extras)
+                    startActivity(intentClases)
                 }
             }
 

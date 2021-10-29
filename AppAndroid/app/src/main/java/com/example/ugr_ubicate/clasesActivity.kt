@@ -34,16 +34,22 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var currentSteps = 0
     private var referencia = false
     private var referenciaGiro = 0f
+    private var perdido = false
     private var giro = 0f
     private var instruccionesRuta1: Array<String> = arrayOf("Salga por la puerta de la clase", "Gire a la derecha", "Camine recto hasta encontrar la clase 3.6")
+    private var instruccionesEscalera34: Array<String> = arrayOf("Gire a la derecha", "Ande todo recto hasta llegar a la clase 3.6")
     private lateinit var  instrucciones: TextView
     private lateinit var  debug: TextView
     private lateinit var  textGiro: TextView
-    private var primeraInstruccion = false
-    private var segundaInstruccion = false
-    private var terceraInstruccion = false
+    private var primeraInstruccionRuta36 = false
+    private var segundaInstruccionRuta36 = false
+    private var terceraInstruccionRuta36 = false
+    private var primeraInstruccionPerdido36 = false
+    private var segundaInstruccionPerdidio36 = false
+
     private var cont = 0
     val ACTIVITY_RQ = 101
+    val CAMERA_RQ = 102
 
 
     //Variable del gesto de agitación
@@ -59,14 +65,30 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_clases)
 
+        // Miro si el usuario esta perdido
+        var sitio = ""
+        var args = getIntent().getExtras()
+        if (args != null)
+            sitio = args.getString("ESTA_PERDIDO_ESCALERA").toString()
+
+        if (sitio == "ESTA_PERDIDO_ESCALERA")
+            perdido = true
+
         instrucciones = findViewById(R.id.instruccionesContainer)
         debug = findViewById(R.id.debug)
         textGiro = findViewById(R.id.textGiro)
-        instrucciones.visibility = View.INVISIBLE
 
 
         val titulo = findViewById<TextView>(R.id.titulo)
         val ruta1 = findViewById<Button>(R.id.ruta1)
+
+        if (!perdido)
+            instrucciones.visibility = View.INVISIBLE
+        else{
+            titulo.visibility = View.INVISIBLE
+            ruta1.visibility = View.INVISIBLE
+            instrucciones.text = instruccionesEscalera34[cont]
+        }
         ruta1.setOnClickListener{
             titulo.visibility = View.INVISIBLE
             ruta1.visibility = View.INVISIBLE
@@ -84,6 +106,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         }
 
+        checkForPermission(android.Manifest.permission.CAMERA,"camera",CAMERA_RQ)
         checkForPermission(android.Manifest.permission.ACTIVITY_RECOGNITION,"activity",ACTIVITY_RQ)
 
 
@@ -99,18 +122,12 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         //evento de acelerometro lineal (desprecia la gravedad, el normal siempre pilla la gravedad)
         if (event!!.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
             //Se obtienen los valores nuevos
-
-            //Se obtienen los valores nuevos
             val new_x = event!!.values[0]
             val new_y = event!!.values[1]
             val new_z = event!!.values[2]
 
             // Se obtiene la hora actual
-
-            // Se obtiene la hora actual
             val horaActual = System.currentTimeMillis()
-
-            // Realiza las comprobaciones solo si han pasado 400 ms
 
             // Realiza las comprobaciones solo si han pasado 400 ms
             if (horaActual - lastUpdate >= 400) {
@@ -136,8 +153,8 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             debug.text = currentSteps.toString()
         }
 
-        if (event!!.sensor.type == Sensor.TYPE_ORIENTATION && primeraInstruccion && !segundaInstruccion) {
-            if (!referencia && primeraInstruccion) {
+        if (event!!.sensor.type == Sensor.TYPE_ORIENTATION) {
+            if (!referencia && (primeraInstruccionRuta36 || (perdido && !primeraInstruccionPerdido36))) {
                 referenciaGiro = event!!.values[0]
                 referencia = true
             }
@@ -145,10 +162,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             textGiro.text = giro.toString()
         }
 
-        if (!agitacionDetectada)
+        if (!agitacionDetectada && !perdido)
             ruta1()
-        else
+
+        if (agitacionDetectada)
             estaPerdido()
+
+        if (perdido)
+            rutaEscalera34()
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
@@ -164,20 +185,34 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
 
     fun ruta1(){
-        if (currentSteps >= 10 && !primeraInstruccion){
+        if (currentSteps >= 10 && !primeraInstruccionRuta36){
             cont++
             instrucciones.text = instruccionesRuta1[cont]
-            primeraInstruccion = true
+            primeraInstruccionRuta36 = true
             currentSteps = 0
         }
-        else if (primeraInstruccion && giro <= -80 && giro >= -110 && !segundaInstruccion) {
+        else if (primeraInstruccionRuta36 && giro <= -80 && giro >= -110 && !segundaInstruccionRuta36) {
             cont++
             instrucciones.text = instruccionesRuta1[cont]
-            segundaInstruccion = true
+            segundaInstruccionRuta36 = true
         }
-        else if (primeraInstruccion && segundaInstruccion && currentSteps >= 5){
+        else if (primeraInstruccionRuta36 && segundaInstruccionRuta36 && currentSteps >= 5){
             instrucciones.text = "¡Ha llegado a su destino!"
-            terceraInstruccion = true
+            terceraInstruccionRuta36 = true
+        }
+    }
+
+    fun rutaEscalera34(){
+        if (primeraInstruccionPerdido36 && giro <= -80 && giro >= -110 && !segundaInstruccionPerdidio36){
+            cont++
+            instrucciones.text = instruccionesEscalera34[cont]
+            primeraInstruccionPerdido36 = true
+            currentSteps = 0
+        }
+        else if (currentSteps >= 20 && !primeraInstruccionPerdido36) {
+            cont++
+            instrucciones.text = instruccionesRuta1[cont]
+            segundaInstruccionPerdidio36 = true
         }
     }
 
@@ -217,6 +252,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         when(requestCode) {
             ACTIVITY_RQ  -> innerCheck("activity")
+            CAMERA_RQ -> innerCheck("camera")
         }
     }
     private fun showDialog(permission: String, name: String, requestCode: Int) {
