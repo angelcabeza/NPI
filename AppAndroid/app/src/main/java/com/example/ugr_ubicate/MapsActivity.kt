@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.location.Location
 import android.os.*
@@ -11,15 +13,15 @@ import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.ugr_ubicate.databinding.ActivityMapsBinding
 import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices.getFusedLocationProviderClient
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.*
 import com.google.maps.android.PolyUtil
 import org.json.JSONException
 import org.json.JSONObject
@@ -30,38 +32,6 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
-import android.os.Looper
-
-import com.google.android.gms.location.LocationResult
-
-import com.google.android.gms.location.LocationCallback
-
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationServices.getFusedLocationProviderClient
-
-import com.google.android.gms.location.SettingsClient
-
-import com.google.android.gms.location.LocationSettingsRequest
-import android.widget.Toast
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-
-import android.graphics.Bitmap
-import android.graphics.Canvas
-
-import androidx.core.content.ContextCompat
-
-import android.graphics.drawable.Drawable
-
-import com.google.android.gms.maps.model.BitmapDescriptor
-
-
-
-
-
-
-
-
-
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -95,7 +65,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var ruta : objectRuta? = null
     private var currentMarcadorRuta : Int = -1
     private var coordMarcadorRuta : LatLng? = null
-    private val distanciaMinMarcador : Float = 10F
+    private val distanciaMinMarcador : Float = 5F
     private var rutaActiva : Boolean = false
 
     private var mLocationRequest: LocationRequest? = null
@@ -197,6 +167,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     progressDialog.dismiss()
                 }
             })
+
+            repeat(10){pasarSiguienteMarcador()}
         }
     }
 
@@ -273,9 +245,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun actualizarMarcadorRuta(i: Int) {
-        currentMarcadorRuta = i
-        if (ruta != null){
-            coordMarcadorRuta = ruta!!.getCoordenadas(i)
+        if (i < ruta!!.numeroSteps()){
+            currentMarcadorRuta = i
+            if (ruta != null){
+                coordMarcadorRuta = ruta!!.getCoordenadas(i)
+            }
+        }
+        else{
+            currentMarcadorRuta = -1
         }
     }
 
@@ -284,6 +261,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         if ( (currentMarcadorRuta + 1) < ruta!!.numeroSteps() ){
             actualizarMarcadorRuta(currentMarcadorRuta + 1)
+
+            mostrarPuntosRuta()
 
             finalRuta = false
         }
@@ -300,17 +279,42 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .color(Color.BLUE)
                 .width(12f)
 
-            var listaPuntosRuta : List<LatLng> = ruta!!.getPuntosRuta()
-            for (punto in listaPuntosRuta){
-                this@MapsActivity.runOnUiThread(Runnable {
-                    map.addMarker(MarkerOptions().position(punto)
-                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.ic_baseline_flag_24))
-                    )
-                })
-            }
-
             this@MapsActivity.runOnUiThread(Runnable {
                 map.addPolyline(polylineOptions)
+            })
+
+            mostrarPuntosRuta()
+        }
+    }
+
+    private fun mostrarPuntosRuta() {
+        var listaPuntosRuta: List<LatLng> = ruta!!.getPuntosRuta()
+        /*for (i in listaPuntosRuta){
+                this@MapsActivity.runOnUiThread(Runnable {
+                    map.addMarker(MarkerOptions().position(punto)
+                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.orange_flag_24))
+                    )
+                })
+            }*/
+
+        for (i in 0..(listaPuntosRuta.size-1)) {
+            this@MapsActivity.runOnUiThread(Runnable {
+                if (i != currentMarcadorRuta) {
+                    map.addMarker(
+                        MarkerOptions().position(listaPuntosRuta[i])
+                            .icon(
+                                BitmapFromVector(
+                                    getApplicationContext(),
+                                    R.drawable.orange_flag_24
+                                )
+                            )
+                    )
+                } else {
+                    map.addMarker(
+                        MarkerOptions().position(listaPuntosRuta[i])
+                            .icon(BitmapFromVector(getApplicationContext(), R.drawable.red_flag_24))
+                    )
+                }
             })
         }
     }
@@ -620,10 +624,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         latitudUsuario = location.latitude
         longitudUsuario = location.longitude
 
-        Log.e("Escuchando", "ahora")
-
         if (rutaActiva) {
-            Log.e("ruta", "activa")
             comprobarUsuarioEnMarcadorRuta()
         }
     }
