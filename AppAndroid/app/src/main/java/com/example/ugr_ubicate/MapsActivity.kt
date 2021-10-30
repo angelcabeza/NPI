@@ -1,14 +1,12 @@
 package com.example.ugr_ubicate
 
 import android.Manifest
-import android.R.attr
-import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.os.*
-import android.view.Gravity
-import android.view.View
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -21,6 +19,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.maps.android.PolyUtil
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -30,16 +30,6 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
-import android.view.LayoutInflater
-import android.R.attr.focusable
-
-import android.widget.PopupWindow
-
-
-
-
-
-
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -52,6 +42,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var spType : Spinner
     private lateinit var btFind : Button
+    private lateinit var btRuta : Button
 
     private var mainHandler : Handler = Handler()
     private lateinit var progressDialog : ProgressDialog
@@ -69,6 +60,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var marcadoresList : List<HashMap<String, Object>>? = null
     private var currentMarker : Int = -1
 
+    private var ruta : objectRuta? = null
+
 
     // Creacion del objeto
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +77,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         spType = findViewById(R.id.sp_type)
         btFind = findViewById(R.id.bt_find)
+        btRuta = findViewById(R.id.bt_ruta)
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
@@ -96,22 +90,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         btFind.setOnClickListener{
             currentPlace = spType.selectedItemPosition
 
-            fetchData().start()
+            fetchMarcadores().start()
+        }
+
+        btRuta.setOnClickListener{
+            fetchRuta().start()
         }
     }
 
-    inner class fetchData : Thread() {
+    inner class fetchMarcadores : Thread() {
         var data : String = ""
 
         override public fun run(){
             mainHandler.post(Runnable {
                 progressDialog = ProgressDialog(this@MapsActivity)
-                progressDialog.setMessage("Leyendo datos")
+                progressDialog.setMessage("Leyendo marcadores")
                 progressDialog.setCancelable(false)
                 progressDialog.show()
             })
 
-            val url_str: String = getUrlForJSON()
+            val url_str: String = getUrlForMarcadores()
 
             try{
                 var url : URL = URL(url_str)
@@ -137,7 +135,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     var obj : JSONObject = JSONObject(data)
 
-                    marcadoresList = jsonParser.parseResult(obj)
+                    marcadoresList = jsonParser.parseResultMarcadores(obj)
 
                     //anidirTodosMarcadoresMapa()
                     reiniciarMarcadoresMapa()
@@ -158,7 +156,98 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun getUrlForJSON(): String {
+    inner class fetchRuta : Thread() {
+        var data : String = ""
+
+        override public fun run(){
+            mainHandler.post(Runnable {
+                progressDialog = ProgressDialog(this@MapsActivity)
+                progressDialog.setMessage("Leyendo ruta")
+                progressDialog.setCancelable(false)
+                progressDialog.show()
+            })
+
+            val url_str: String = getUrlForRoute()
+
+            try{
+                var url : URL = URL(url_str)
+
+                var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
+
+                var inputStream : InputStream = httpsURLConnection.inputStream
+
+                var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
+
+                var line : String? = null
+
+                line = bufferedReader.readLine()
+
+                while ( line != null ){
+                    data = data + line
+
+                    line = bufferedReader.readLine()
+                }
+
+                if (! data.isEmpty()){
+                    val jsonParser : JsonParser = JsonParser()
+
+                    var obj : JSONObject = JSONObject(data)
+
+                    ruta = jsonParser.parseResultRuta(obj)
+
+                    mostrarRuta()
+                }
+            } catch (e : MalformedURLException){
+                e.printStackTrace()
+            } catch (e : IOException){
+                e.printStackTrace()
+            } catch (e : JSONException){
+                e.printStackTrace()
+            }
+
+            mainHandler.post(Runnable {
+                if(progressDialog.isShowing){
+                    progressDialog.dismiss()
+                }
+            })
+        }
+    }
+
+    private fun mostrarRuta(){
+        if (ruta != null){
+            var pathPoints : List<LatLng> = PolyUtil.decode(ruta!!.polylineTotal())
+
+            val polylineOptions = PolylineOptions()
+                .addAll(pathPoints)
+                .color(Color.BLUE)
+                .width(12f)
+
+            this@MapsActivity.runOnUiThread(Runnable {
+                map.addPolyline(polylineOptions)
+            })
+        }
+    }
+
+    private fun getUrlForRoute(): String {
+        val hashMarcadores: HashMap<String, Object> = marcadoresList!!.get(currentMarker)
+
+        val lat: Double = hashMarcadores.get("lat") as Double
+        val lng: Double = hashMarcadores.get("lon") as Double
+
+        // https://router.project-osrm.org/route/v1/foot/-3.608628,37.173484;-3.607011,37.175732?steps=true&geometries=polyline
+        val url_str : String = "https://router.project-osrm.org/route/v1/foot/" +
+                longitudUsuario + "," +
+                latitudUsuario + ";" +
+                lng + "," +
+                lat +
+                "?steps=true&geometries=polyline"
+
+        return url_str
+    }
+
+    private fun getUrlForMarcadores(): String {
+        // https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];nwr(around:1000,37.178358,-3.602850)[%22amenity%22=%22hospital%22];out%20tags%20center;
+
         val url_str: String = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];nwr(around:" +
                 radioBusqueda + "," +
                 latitudUsuario + "," +
@@ -267,18 +356,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    /*private fun inicioVentanaSitios(view: View) {
-        // inflate the layout of the popup window
-        var inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        //var popupView: View = inflater.inflate(R.layout.activity_maps, null)
-        var popupView: View = binding.root
-
-        popUpSitios = PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT, true)
-
-        popUpSitios.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-    }*/
-
     // Ver la ultima ubicacion del ususario
     private fun obtenerUltimaUbicacion() {
         solicitarPermisoUbicacionPrecisa()
@@ -320,10 +397,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     // Solicitar permisos
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray,) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (REQUEST_PERMISSION_CODE == requestCode){
             if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED){
@@ -332,15 +407,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
@@ -355,6 +422,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val marcador = LatLng(37.197282, -3.624350)
         map.addMarker(MarkerOptions().position(marcador).title("ETSIIT"))
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
+
+        /*var points: ArrayList<LatLng> = ArrayList<LatLng>()
+        var lineOptions: PolylineOptions = PolylineOptions()
+
+        points.add(LatLng(37.197282, -3.624350))
+        points.add(LatLng(37.121341, -3.631489))
+
+        lineOptions.addAll(points)
+        lineOptions.width(12f)
+        lineOptions.color(Color.RED)
+        lineOptions.geodesic(true)
+        */
 
         activarUbicacionEnMapa()
 
