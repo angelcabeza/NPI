@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/bt_ruta"
-            android:text="Ruta"/>
+            android:text="Iniciar ruta"/>
 
     </LinearLayout>
 

@@ -142,8 +142,8 @@ public class JsonParser {
                 try {
                     var step : JSONObject = jsonArray.get(i) as JSONObject
 
-                    var longitud : Double = step.getJSONObject("location").get("0") as Double
-                    var latitud : Double = step.getJSONObject("location").get("1") as Double
+                    var longitud : Double = step.getJSONArray("location").get(0) as Double
+                    var latitud : Double = step.getJSONArray("location").get(1) as Double
 
                     var coordenadas : LatLng = LatLng(latitud, longitud)
 
@@ -188,10 +188,10 @@ public class JsonParser {
             var intersections : List<LatLng> = parseJsonArrayIntersections(obj.getJSONArray("intersections"))
 
 
-            var geometries : String = obj.get("geometries") as String
+            var geometries : String = obj.get("geometry") as String
 
 
-            var maneuver : JSONObject = obj.getJSONArray("maneuver") as JSONObject
+            var maneuver : JSONObject = obj.getJSONObject("maneuver")
 
             var typeManeuver : String = maneuver.get("type") as String
 
@@ -206,8 +206,8 @@ public class JsonParser {
             }
 
 
-            var longitud : Double = maneuver.getJSONObject("location").get("0") as Double
-            var latitud : Double = maneuver.getJSONObject("location").get("1") as Double
+            var longitud : Double = maneuver.getJSONArray("location").get(0) as Double
+            var latitud : Double = maneuver.getJSONArray("location").get(1) as Double
             var coordenadas : LatLng = LatLng(latitud, longitud)
 
 
@@ -316,23 +316,37 @@ public class objectRuta{
         return arraySteps.get(i)
     }
 
-    public fun getName (i : Int) : Object? {
-        return arraySteps.get(i).get("name")
+    public fun getName (i : Int) : String? {
+        return arraySteps.get(i).get("name") as String
     }
 
-    public fun getCoordenadas (i : Int) : Object? {
-        return arraySteps.get(i).get("coordenadas")
+    public fun getCoordenadas (i : Int) : LatLng? {
+        return arraySteps.get(i).get("coordenadas") as LatLng
     }
 
-    public fun getPolyline (i : Int) : Object? {
-        return arraySteps.get(i).get("geometries")
+    public fun getPolyline (i : Int) : String? {
+        return arraySteps.get(i).get("geometries") as String
     }
 
-    public fun getTypeManeuver (i : Int) : Object? {
-        return arraySteps.get(i).get("typeManeuver")
+    public fun getTypeManeuver (i : Int) : String? {
+        return arraySteps.get(i).get("typeManeuver") as String
     }
 
-    public fun getIntersections (i : Int) : Object? {
-        return arraySteps.get(i).get("intersections")
+    public fun getIntersections (i : Int) : List<LatLng>? {
+        return arraySteps.get(i).get("intersections") as List<LatLng>
+    }
+
+    public fun numeroSteps () : Int {
+        return arraySteps.size
+    }
+
+    public fun getPuntosRuta () : List<LatLng> {
+        var lista : MutableList<LatLng> = ArrayList()
+
+        for (step in arraySteps){
+            lista.add(step.get("coordenadas") as LatLng)
+        }
+
+        return lista
     }
 }

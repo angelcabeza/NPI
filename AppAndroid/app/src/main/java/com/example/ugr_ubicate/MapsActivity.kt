@@ -2,6 +2,7 @@ package com.example.ugr_ubicate
 
 import android.Manifest
 import android.app.ProgressDialog
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -11,8 +12,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.ugr_ubicate.databinding.ActivityMapsBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -30,6 +30,38 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import android.os.Looper
+
+import com.google.android.gms.location.LocationResult
+
+import com.google.android.gms.location.LocationCallback
+
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationServices.getFusedLocationProviderClient
+
+import com.google.android.gms.location.SettingsClient
+
+import com.google.android.gms.location.LocationSettingsRequest
+import android.widget.Toast
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+
+import android.graphics.Bitmap
+import android.graphics.Canvas
+
+import androidx.core.content.ContextCompat
+
+import android.graphics.drawable.Drawable
+
+import com.google.android.gms.maps.model.BitmapDescriptor
+
+
+
+
+
+
+
+
+
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -61,6 +93,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var currentMarker : Int = -1
 
     private var ruta : objectRuta? = null
+    private var currentMarcadorRuta : Int = -1
+    private var coordMarcadorRuta : LatLng? = null
+    private val distanciaMinMarcador : Float = 10F
+    private var rutaActiva : Boolean = false
+
+    private var mLocationRequest: LocationRequest? = null
+
+    private val UPDATE_INTERVAL = (1 * 1000 /* 10 secs */).toLong()
+    private val FASTEST_INTERVAL: Long = 500 /* 2 sec */
 
 
     // Creacion del objeto
@@ -87,6 +128,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         obtenerUltimaUbicacion()
 
+        startLocationUpdates()
+
         btFind.setOnClickListener{
             currentPlace = spType.selectedItemPosition
 
@@ -94,9 +137,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btRuta.setOnClickListener{
+            rutaActiva = true
             fetchRuta().start()
         }
     }
+
 
     inner class fetchMarcadores : Thread() {
         var data : String = ""
@@ -137,7 +182,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     marcadoresList = jsonParser.parseResultMarcadores(obj)
 
-                    //anidirTodosMarcadoresMapa()
                     reiniciarMarcadoresMapa()
                 }
             } catch (e : MalformedURLException){
@@ -196,6 +240,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     ruta = jsonParser.parseResultRuta(obj)
 
                     mostrarRuta()
+
+                    actualizarMarcadorRuta(0)
                 }
             } catch (e : MalformedURLException){
                 e.printStackTrace()
@@ -213,6 +259,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun comprobarUsuarioEnMarcadorRuta(){
+        var distancia : FloatArray = FloatArray(1)
+
+        Location.distanceBetween(coordMarcadorRuta!!.latitude, coordMarcadorRuta!!.longitude,
+            latitudUsuario!!, longitudUsuario!!, distancia)
+
+        if (distancia[0] <= distanciaMinMarcador){
+            Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_SHORT).show()
+
+            rutaActiva = pasarSiguienteMarcadorRuta()
+        }
+    }
+
+    private fun actualizarMarcadorRuta(i: Int) {
+        currentMarcadorRuta = i
+        if (ruta != null){
+            coordMarcadorRuta = ruta!!.getCoordenadas(i)
+        }
+    }
+
+    private fun pasarSiguienteMarcadorRuta() : Boolean {
+        var finalRuta : Boolean = true
+
+        if ( (currentMarcadorRuta + 1) < ruta!!.numeroSteps() ){
+            actualizarMarcadorRuta(currentMarcadorRuta + 1)
+
+            finalRuta = false
+        }
+
+        return finalRuta
+    }
+
     private fun mostrarRuta(){
         if (ruta != null){
             var pathPoints : List<LatLng> = PolyUtil.decode(ruta!!.polylineTotal())
@@ -221,6 +299,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .addAll(pathPoints)
                 .color(Color.BLUE)
                 .width(12f)
+
+            var listaPuntosRuta : List<LatLng> = ruta!!.getPuntosRuta()
+            for (punto in listaPuntosRuta){
+                this@MapsActivity.runOnUiThread(Runnable {
+                    map.addMarker(MarkerOptions().position(punto)
+                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.ic_baseline_flag_24))
+                    )
+                })
+            }
 
             this@MapsActivity.runOnUiThread(Runnable {
                 map.addPolyline(polylineOptions)
@@ -320,7 +407,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun anidirTodosMarcadoresMapa() {
+    private fun aniadirTodosMarcadoresMapa() {
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
         })
@@ -373,7 +460,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     supportMapFragment.getMapAsync(this)
                 }
-            }
+         }
     }
 
     // Comprobar y solicitar el permiso de Internet
@@ -398,7 +485,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     // Solicitar permisos
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                                            grantResults: IntArray,) {
+        grantResults: IntArray,) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (REQUEST_PERMISSION_CODE == requestCode){
             if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED){
@@ -444,6 +531,39 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+
+    private fun BitmapFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+        // below line is use to generate a drawable.
+        val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
+
+        // below line is use to set bounds to our vector drawable.
+        vectorDrawable!!.setBounds(
+            0,
+            0,
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight
+        )
+
+        // below line is use to create a bitmap for our
+        // drawable which we have added.
+        val bitmap = Bitmap.createBitmap(
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+
+        // below line is use to add bitmap in our canvas.
+        val canvas = Canvas(bitmap)
+
+        // below line is use to draw our
+        // vector drawable in canvas.
+        vectorDrawable.draw(canvas)
+
+        // after generating our bitmap we are returning our bitmap.
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+
     private fun activarUbicacionEnMapa() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
@@ -453,4 +573,59 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         map.isMyLocationEnabled = true
     }
+
+
+    // Trigger new location updates at interval
+    private fun startLocationUpdates() {
+
+        // Create the location request to start receiving updates
+        mLocationRequest = LocationRequest()
+        mLocationRequest!!.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+        mLocationRequest!!.setInterval(UPDATE_INTERVAL)
+        mLocationRequest!!.setFastestInterval(FASTEST_INTERVAL)
+
+        // Create LocationSettingsRequest object using location request
+        val builder = LocationSettingsRequest.Builder()
+        builder.addLocationRequest(mLocationRequest)
+        val locationSettingsRequest = builder.build()
+
+        // Check whether location settings are satisfied
+        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
+        val settingsClient = LocationServices.getSettingsClient(this)
+        settingsClient.checkLocationSettings(locationSettingsRequest)
+
+        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        getFusedLocationProviderClient(this).requestLocationUpdates(
+            mLocationRequest, object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    // do work here
+                    onLocationChanged(locationResult.lastLocation)
+                }
+            },
+            Looper.myLooper()
+        )
+    }
+
+    private fun onLocationChanged(location: Location) {
+        latitudUsuario = location.latitude
+        longitudUsuario = location.longitude
+
+        Log.e("Escuchando", "ahora")
+
+        if (rutaActiva) {
+            Log.e("ruta", "activa")
+            comprobarUsuarioEnMarcadorRuta()
+        }
+    }
+
 }
