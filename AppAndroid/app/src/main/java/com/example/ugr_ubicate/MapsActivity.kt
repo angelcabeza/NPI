@@ -32,6 +32,8 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import com.google.android.gms.maps.model.Marker
+import com.google.maps.android.SphericalUtil
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -70,8 +72,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var mLocationRequest: LocationRequest? = null
 
-    private val UPDATE_INTERVAL = (1 * 1000 /* 10 secs */).toLong()
+    private val UPDATE_INTERVAL = (1 * 1000 /* 1 secs */).toLong()
     private val FASTEST_INTERVAL: Long = 500 /* 2 sec */
+
+    private var flechaPuntoRuta: Marker? = null
+    private var flechaDibujada : Boolean = false
 
 
     // Creacion del objeto
@@ -211,9 +216,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     ruta = jsonParser.parseResultRuta(obj)
 
-                    mostrarRuta()
-
                     actualizarMarcadorRuta(0)
+
+                    mostrarRuta()
                 }
             } catch (e : MalformedURLException){
                 e.printStackTrace()
@@ -240,7 +245,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (distancia[0] <= distanciaMinMarcador){
             Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_SHORT).show()
 
-            rutaActiva = pasarSiguienteMarcadorRuta()
+            pasarSiguienteMarcadorRuta()
         }
     }
 
@@ -256,22 +261,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun pasarSiguienteMarcadorRuta() : Boolean {
-        var finalRuta : Boolean = true
-
+    private fun pasarSiguienteMarcadorRuta() {
         if ( (currentMarcadorRuta + 1) < ruta!!.numeroSteps() ){
             actualizarMarcadorRuta(currentMarcadorRuta + 1)
 
-            mostrarPuntosRuta()
-
-            finalRuta = false
+            mostrarRuta()
         }
-
-        return finalRuta
+        else{
+            rutaActiva = false
+        }
     }
 
     private fun mostrarRuta(){
         if (ruta != null){
+            rutaActiva = true
+
             var pathPoints : List<LatLng> = PolyUtil.decode(ruta!!.polylineTotal())
 
             val polylineOptions = PolylineOptions()
@@ -280,6 +284,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .width(12f)
 
             this@MapsActivity.runOnUiThread(Runnable {
+                map.clear()
+                flechaDibujada = false
+
                 map.addPolyline(polylineOptions)
             })
 
@@ -289,13 +296,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun mostrarPuntosRuta() {
         var listaPuntosRuta: List<LatLng> = ruta!!.getPuntosRuta()
-        /*for (i in listaPuntosRuta){
-                this@MapsActivity.runOnUiThread(Runnable {
-                    map.addMarker(MarkerOptions().position(punto)
-                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.orange_flag_24))
-                    )
-                })
-            }*/
 
         for (i in 0..(listaPuntosRuta.size-1)) {
             this@MapsActivity.runOnUiThread(Runnable {
@@ -317,6 +317,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             })
         }
+
+        actualizarFlechaMarcador()
     }
 
     private fun getUrlForRoute(): String {
@@ -352,6 +354,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun reiniciarMarcadoresMapa(){
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
+
+            flechaDibujada = false
         })
 
         if (marcadoresList != null) {
@@ -383,6 +387,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun pasarSiguienteMarcador(){
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
+
+            flechaDibujada = false
         })
 
         if (marcadoresList != null && (currentMarker + 1) < marcadoresList!!.size ) {
@@ -414,6 +420,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun aniadirTodosMarcadoresMapa() {
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
+
+            flechaDibujada = false
         })
 
         if (marcadoresList != null) {
@@ -488,8 +496,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     // Solicitar permisos
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-        grantResults: IntArray,) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (REQUEST_PERMISSION_CODE == requestCode){
             if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED){
@@ -626,7 +636,42 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         if (rutaActiva) {
             comprobarUsuarioEnMarcadorRuta()
+            actualizarFlechaMarcador()
         }
+    }
+
+    private fun actualizarFlechaMarcador() {
+        val locationUser = Location("user") //provider name is unnecessary
+        locationUser.latitude = latitudUsuario!! //your coords of course
+        locationUser.longitude = longitudUsuario!!
+
+        val locationMarker = Location("marker") //provider name is unnecessary
+        locationMarker.latitude = coordMarcadorRuta!!.latitude //your coords of course
+        locationMarker.longitude = coordMarcadorRuta!!.longitude
+
+        var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
+        var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
+        //var nueva_rotacion : Double = SphericalUtil.computeHeading(LatLng(latitudUsuario, longitudUsuario), latlng2)
+
+        if (flechaDibujada){
+            this@MapsActivity.runOnUiThread(Runnable {
+                flechaPuntoRuta!!.position = nueva_pos
+                flechaPuntoRuta!!.rotation = nueva_rotacion
+                flechaPuntoRuta!!.isVisible = rutaActiva
+            })
+        }
+        else{
+            this@MapsActivity.runOnUiThread(Runnable {
+                flechaPuntoRuta = map.addMarker(MarkerOptions()
+                    .position(nueva_pos)
+                    .flat(true)
+                    .rotation(nueva_rotacion)
+                    .icon(BitmapFromVector(getApplicationContext(), R.drawable.arrow_next_marker_24))
+                    .visible(rutaActiva))
+            })
+        }
+
+        flechaDibujada = true
     }
 
 }
