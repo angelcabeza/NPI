@@ -29,8 +29,6 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var sensorPodometro: Sensor
     private lateinit var sensorBrujula: Sensor
     private lateinit var sensorAcelerometro: Sensor
-    private var previousTotalSteps = 0f
-    private var totalSteps = 0f
     private var currentSteps = 0
     private var referencia = false
     private var referenciaGiro = 0f
@@ -39,8 +37,6 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var instruccionesRuta1: Array<String> = arrayOf("Salga por la puerta de la clase", "Gire a la derecha", "Camine recto hasta encontrar la clase 3.6")
     private var instruccionesEscalera34: Array<String> = arrayOf("Gire a la derecha", "Ande todo recto hasta llegar a la clase 3.6")
     private lateinit var  instrucciones: TextView
-    private lateinit var  debug: TextView
-    private lateinit var  textGiro: TextView
     private var primeraInstruccionRuta36 = false
     private var segundaInstruccionRuta36 = false
     private var terceraInstruccionRuta36 = false
@@ -57,10 +53,12 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var last_x =0f
     private var last_y = 0f
     private var last_z = 0f
-    private val SHAKE_THRESHOLD = 200
+    private val SHAKE_THRESHOLD = 400
     var agitacionDetectada1 = false
     var agitacionDetectada2 = false
-
+    private lateinit var xAcc : TextView
+    private lateinit var yAcc : TextView
+    private lateinit var zAcc : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,12 +72,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             perdido = true
 
         instrucciones = findViewById(R.id.instruccionesContainer)
-        debug = findViewById(R.id.debug)
-        textGiro = findViewById(R.id.textGiro)
 
 
         val titulo = findViewById<TextView>(R.id.titulo)
         val ruta1 = findViewById<Button>(R.id.ruta1)
+        xAcc = findViewById(R.id.xAcc)
+        yAcc = findViewById(R.id.yAcc)
+        zAcc = findViewById(R.id.zAcc)
+
 
         if (!perdido)
             instrucciones.visibility = View.INVISIBLE
@@ -118,6 +118,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             val new_y = event!!.values[1]
             val new_z = event!!.values[2]
 
+            xAcc.text = new_x.toString()
+            yAcc.text = new_y.toString()
+            zAcc.text = new_z.toString()
+            
             // Se obtiene la hora actual
             val horaActual = System.currentTimeMillis()
 
@@ -129,7 +133,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 val velocidad: Float = Math.abs(new_y - last_y) / diferencia * 10000
 
                 // Si la velocidad es suficiente y el movil no se ha girado en el eje X
-                if (velocidad >= SHAKE_THRESHOLD && new_x > -2 && new_x <= 1) {
+                if (velocidad >= SHAKE_THRESHOLD && new_x > -30 && new_x <= 30 && new_z > -30 && new_z > 30) {
                     if (!agitacionDetectada1)
                         agitacionDetectada1 = true
                     else
@@ -145,7 +149,6 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         if (event!!.sensor.type == Sensor.TYPE_STEP_DETECTOR){
             currentSteps +=1
-            debug.text = currentSteps.toString()
         }
 
         if (event!!.sensor.type == Sensor.TYPE_ORIENTATION) {
@@ -154,7 +157,6 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 referencia = true
             }
             giro = referenciaGiro - event!!.values[0]
-            textGiro.text = giro.toString()
         }
 
         if (!agitacionDetectada1 && !perdido)
@@ -227,10 +229,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun estaPerdido(){
-        //agitacionDetectada1 = false
-        instrucciones.text = "Si se ha perdido busca un código QR y le indicaremos la ruta\n desde ahí"
-        // Espero 5 segundos para que el usuario lea lo que tiene que hacer
-        //activarQR()
+        instrucciones.text = "Si se ha perdido busque un código QR y le indicaremos la ruta desde allí"
     }
 
     private fun activarQR(){
