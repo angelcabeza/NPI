@@ -58,7 +58,8 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var last_y = 0f
     private var last_z = 0f
     private val SHAKE_THRESHOLD = 200
-    var agitacionDetectada = false
+    var agitacionDetectada1 = false
+    var agitacionDetectada2 = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,12 +67,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         setContentView(R.layout.activity_clases)
 
         // Miro si el usuario esta perdido
-        var sitio = ""
-        var args = getIntent().getExtras()
-        if (args != null)
-            sitio = args.getString("ESTA_PERDIDO_ESCALERA").toString()
+        var intent = getIntent()
+        var sitio = intent.getStringExtra("qrActivity.Escalera")
 
-        if (sitio == "ESTA_PERDIDO_ESCALERA")
+        if (sitio != null)
             perdido = true
 
         instrucciones = findViewById(R.id.instruccionesContainer)
@@ -89,21 +88,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             ruta1.visibility = View.INVISIBLE
             instrucciones.text = instruccionesEscalera34[cont]
         }
-        ruta1.setOnClickListener{
-            titulo.visibility = View.INVISIBLE
-            ruta1.visibility = View.INVISIBLE
-            instrucciones.text = instruccionesRuta1[cont]
-            instrucciones.visibility = View.VISIBLE
 
-            sensorPodometro = sensorManagerPodometro.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
-            sensorManagerPodometro?.registerListener(this, sensorPodometro, SensorManager.SENSOR_DELAY_FASTEST)
-
-            sensorBrujula = sensorManagerBrujula.getDefaultSensor((Sensor.TYPE_ORIENTATION))
-            sensorManagerBrujula?.registerListener(this, sensorBrujula, SensorManager.SENSOR_DELAY_NORMAL)
-
-            sensorAcelerometro = sensorManagerAcelerometro.getDefaultSensor((Sensor.TYPE_LINEAR_ACCELERATION))
-            sensorManagerAcelerometro?.registerListener(this, sensorAcelerometro, SensorManager.SENSOR_DELAY_NORMAL)
-
+        if (!perdido) {
+            ruta1.setOnClickListener {
+                titulo.visibility = View.INVISIBLE
+                ruta1.visibility = View.INVISIBLE
+                instrucciones.text = instruccionesRuta1[cont]
+                instrucciones.visibility = View.VISIBLE
+            }
         }
 
         checkForPermission(android.Manifest.permission.CAMERA,"camera",CAMERA_RQ)
@@ -138,7 +130,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
                 // Si la velocidad es suficiente y el movil no se ha girado en el eje X
                 if (velocidad >= SHAKE_THRESHOLD && new_x > -2 && new_x <= 1) {
-                    agitacionDetectada = true
+                    if (!agitacionDetectada1)
+                        agitacionDetectada1 = true
+                    else
+                        agitacionDetectada2 = true
                 }
 
                 //Actualiza las coordenadas
@@ -162,11 +157,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             textGiro.text = giro.toString()
         }
 
-        if (!agitacionDetectada && !perdido)
+        if (!agitacionDetectada1 && !perdido)
             ruta1()
 
-        if (agitacionDetectada)
+        if (agitacionDetectada1 && !agitacionDetectada2)
             estaPerdido()
+
+        if (agitacionDetectada2)
+            activarQR()
 
         if (perdido)
             rutaEscalera34()
@@ -181,6 +179,18 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         sensorManagerPodometro.unregisterListener(this,sensorPodometro)
         sensorManagerBrujula.unregisterListener(this,sensorBrujula)
         sensorManagerAcelerometro.unregisterListener(this,sensorAcelerometro)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorPodometro = sensorManagerPodometro.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
+        sensorManagerPodometro?.registerListener(this, sensorPodometro, SensorManager.SENSOR_DELAY_FASTEST)
+
+        sensorBrujula = sensorManagerBrujula.getDefaultSensor((Sensor.TYPE_ORIENTATION))
+        sensorManagerBrujula?.registerListener(this, sensorBrujula, SensorManager.SENSOR_DELAY_NORMAL)
+
+        sensorAcelerometro = sensorManagerAcelerometro.getDefaultSensor((Sensor.TYPE_LINEAR_ACCELERATION))
+        sensorManagerAcelerometro?.registerListener(this, sensorAcelerometro, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
 
@@ -203,23 +213,29 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     }
 
     fun rutaEscalera34(){
-        if (primeraInstruccionPerdido36 && giro <= -80 && giro >= -110 && !segundaInstruccionPerdidio36){
+        if (!primeraInstruccionPerdido36 && giro <= -80 && giro >= -110 && !segundaInstruccionPerdidio36){
             cont++
             instrucciones.text = instruccionesEscalera34[cont]
             primeraInstruccionPerdido36 = true
             currentSteps = 0
         }
-        else if (currentSteps >= 20 && !primeraInstruccionPerdido36) {
+        else if (currentSteps >= 20 && primeraInstruccionPerdido36 && !segundaInstruccionPerdidio36) {
             cont++
-            instrucciones.text = instruccionesRuta1[cont]
+            instrucciones.text = "Ha llegado a su destino"
             segundaInstruccionPerdidio36 = true
         }
     }
 
     private fun estaPerdido(){
-        agitacionDetectada = false
+        //agitacionDetectada1 = false
         instrucciones.text = "Si se ha perdido busca un código QR y le indicaremos la ruta\n desde ahí"
         // Espero 5 segundos para que el usuario lea lo que tiene que hacer
+        //activarQR()
+    }
+
+    private fun activarQR(){
+        agitacionDetectada1 = false
+        agitacionDetectada2 = false
         val intent = Intent(this, qrActivity::class.java)
         startActivity(intent)
     }
