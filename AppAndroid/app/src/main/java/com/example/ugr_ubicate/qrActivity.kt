@@ -38,9 +38,9 @@ class qrActivity : AppCompatActivity() {
 
         codeScanner = CodeScanner(this, scanner_view)
 
-        codeScanner()
-
         intentClases = Intent(this, clasesActivity::class.java)
+
+        codeScanner()
     }
 
     private fun codeScanner() {
@@ -54,16 +54,7 @@ class qrActivity : AppCompatActivity() {
 
             decodeCallback = DecodeCallback {
                 runOnUiThread {
-                    val extras = Bundle()
-                    if (it.text == "Escalera") {
-                        var estaEscalera = true
-                        extras.putString("ESTA_PERDIDO_ESCALERA","perdido_escalera")
-                    }else
-                        extras.putString("ESTA_PERDIDO_OTRO","perdido_otro")
-
-                    tv_textScannerView.text = it.text
-
-                    intent.putExtras(extras)
+                    intentClases.putExtra("qrActivity.Escalera",it.text)
                     startActivity(intentClases)
                 }
             }
