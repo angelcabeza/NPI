@@ -157,7 +157,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     marcadoresList = jsonParser.parseResultMarcadores(obj)
 
-                    reiniciarMarcadoresMapa()
+                    //reiniciarMarcadoresMapa()
+                    aniadirTodosMarcadoresMapa()
                 }
             } catch (e : MalformedURLException){
                 e.printStackTrace()
@@ -173,7 +174,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             })
 
-            repeat(10){pasarSiguienteMarcador()}
+            //repeat(10){pasarSiguienteMarcador()}
         }
     }
 
@@ -243,7 +244,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             latitudUsuario!!, longitudUsuario!!, distancia)
 
         if (distancia[0] <= distanciaMinMarcador){
-            Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_LONG).show()
 
             pasarSiguienteMarcadorRuta()
         }
@@ -269,6 +270,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         else{
             rutaActiva = false
+            Toast.makeText(this, "Fin de ruta", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -299,7 +301,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         for (i in 0..(listaPuntosRuta.size-1)) {
             this@MapsActivity.runOnUiThread(Runnable {
-                if (i != currentMarcadorRuta) {
+                if (i == (listaPuntosRuta.size-1)){
+                    map.addMarker(
+                        MarkerOptions().position(listaPuntosRuta[i])
+                            .icon(BitmapFromVector(getApplicationContext(), R.drawable.flag_destino_24))
+                    )
+                }
+                else if (i != currentMarcadorRuta) {
                     map.addMarker(
                         MarkerOptions().position(listaPuntosRuta[i])
                             .icon(
@@ -309,7 +317,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                 )
                             )
                     )
-                } else {
+                }
+                else {
                     map.addMarker(
                         MarkerOptions().position(listaPuntosRuta[i])
                             .icon(BitmapFromVector(getApplicationContext(), R.drawable.red_flag_24))
@@ -319,6 +328,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         actualizarFlechaMarcador()
+
+        this@MapsActivity.runOnUiThread(Runnable {
+            if (latitudUsuario != null && longitudUsuario != null){
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(latitudUsuario!!, longitudUsuario!!), 16.0F)
+                )
+            }
+        })
     }
 
     private fun getUrlForRoute(): String {
@@ -448,11 +465,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        if (latitudUsuario != null && longitudUsuario != null){
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                LatLng(latitudUsuario!!, longitudUsuario!!), 13.0F)
-            )
-        }
+        this@MapsActivity.runOnUiThread(Runnable {
+            if (latitudUsuario != null && longitudUsuario != null){
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(latitudUsuario!!, longitudUsuario!!), 13.0F)
+                )
+            }
+        })
     }
 
     // Ver la ultima ubicacion del ususario
@@ -641,6 +660,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun actualizarFlechaMarcador() {
+        this@MapsActivity.runOnUiThread(Runnable {
+            if (flechaPuntoRuta != null){
+                flechaPuntoRuta!!.isVisible = false
+            }
+        })
+
         val locationUser = Location("user") //provider name is unnecessary
         locationUser.latitude = latitudUsuario!! //your coords of course
         locationUser.longitude = longitudUsuario!!
@@ -651,7 +676,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
         var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
-        //var nueva_rotacion : Double = SphericalUtil.computeHeading(LatLng(latitudUsuario, longitudUsuario), latlng2)
 
         if (flechaDibujada){
             this@MapsActivity.runOnUiThread(Runnable {
