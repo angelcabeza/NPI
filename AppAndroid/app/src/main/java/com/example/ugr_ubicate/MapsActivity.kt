@@ -161,11 +161,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         swipeExit = true
                     }
                     if (horaActual - lastUpdate1 <= 400 && y < 50 && x < 50 && x > -50 && z > 0){
-                        //swipeOff = true
+                        swipeOff = true
                         pasarSiguienteMarcador()
                     }
                     if (horaActual - lastUpdate1 <= 400 && y <85 && x < 50 && x > -50 && z < 0){
-                        //swipeOn = true
+                        swipeOn = true
                         rutaActiva = true
                         fetchRuta().start()
                     }
