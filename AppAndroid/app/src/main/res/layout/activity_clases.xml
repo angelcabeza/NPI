@@ -24,46 +24,58 @@
         android:id="@+id/ruta1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_below="@+id/titulo"
-        android:text="Ruta hacia clase 3.6" />
+        android:layout_centerHorizontal="true"
+        android:text="Ruta hacia clase 3.4" />
 
     <TextView
         android:id="@+id/instruccionesContainer"
-        android:layout_width="196dp"
-        android:layout_height="36dp"
+        android:layout_width="304dp"
+        android:layout_height="212dp"
         android:layout_below="@+id/ruta1"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="56dp"
-        android:text="TextView" />
+        android:layout_centerVertical="true"
+        android:text="TextView"
+        android:textSize="36dp"
+        android:textColor="@color/black"
+        android:justificationMode="inter_word"
+    />
 
     <TextView
-        android:id="@+id/debug"
+        android:id="@+id/xAcc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/instruccionesContainer"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="110dp"
-        android:layout_marginTop="56dp"
-        android:layout_marginEnd="243dp"
-        android:layout_marginBottom="261dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="141dp"
+        android:layout_marginBottom="102dp"
         android:text="TextView" />
 
     <TextView
-        android:id="@+id/textGiro"
-        android:layout_width="111dp"
-        android:layout_height="33dp"
+        android:id="@+id/yAcc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/instruccionesContainer"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="155dp"
-        android:layout_marginTop="191dp"
-        android:layout_marginEnd="145dp"
-        android:layout_marginBottom="157dp"
+        android:layout_marginStart="110dp"
+        android:layout_marginTop="138dp"
+        android:layout_marginEnd="185dp"
+        android:layout_marginBottom="104dp"
+        android:layout_toEndOf="@+id/xAcc"
         android:text="TextView" />
 
-
+    <TextView
+        android:id="@+id/zAcc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/instruccionesContainer"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="138dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginBottom="104dp"
+        android:text="TextView" />
 
 
 </RelativeLayout>
