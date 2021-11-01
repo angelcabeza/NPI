@@ -7,6 +7,10 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.*
 import android.util.Log
@@ -78,6 +82,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var flechaPuntoRuta: Marker? = null
     private var flechaDibujada : Boolean = false
 
+    //Vector de gravedad para marcar la rotación del telefono
+    private var gravity: FloatArray? = FloatArray(3)
+
+    //Variables de coordenadas
+    private var x: Float = 0f
+    private var y: Float = 0f
+    private var z: Float = 0f
+
+    //Esto marca la ventana de tiempo para hacer el gesto
+    private var lastUpdate1: Long = 0
+
+    //Estas son las variables que marcan si se ha hecho uno de los gestos. Después de usarlas ponlas a 0
+    private var swipeOff: Boolean = false
+    private var swipeOn: Boolean = false
+    private var swipeExit: Boolean = false
+
+
 
     // Creacion del objeto
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,6 +136,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             rutaActiva = true
             fetchRuta().start()
         }
+
+        var sm = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        var sens_grav = sm.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        var se = object: SensorEventListener {
+            override fun onAccuracyChanged(p0: Sensor?, p1: Int){}
+
+            override fun onSensorChanged(sensorEvent: SensorEvent?){
+                when (sensorEvent?.sensor?.getType()){
+                    Sensor.TYPE_GRAVITY        -> gravity = sensorEvent.values.clone()
+                }
+
+                if (gravity != null){
+                    x = ((gravity!![0]/9.8f)*100).toInt().toFloat()
+                    y = ((gravity!![1]/9.8f)*100).toInt().toFloat()
+                    z = ((gravity!![2]/9.8f)*100).toInt().toFloat()
+
+                    val horaActual = System.currentTimeMillis()
+
+                    if (y > 70 && z > 0){
+                        lastUpdate1 = horaActual
+                    }
+                    if (x > 50){
+                        swipeExit = true
+                    }
+                    if (horaActual - lastUpdate1 <= 400 && y < 50 && x < 50 && x > -50 && z > 0){
+                        //swipeOff = true
+                        pasarSiguienteMarcador()
+                    }
+                    if (horaActual - lastUpdate1 <= 400 && y <85 && x < 50 && x > -50 && z < 0){
+                        //swipeOn = true
+                        rutaActiva = true
+                        fetchRuta().start()
+                    }
+                }
+            }
+        }
+        sm.registerListener(se,sens_grav,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
 
@@ -157,8 +215,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     marcadoresList = jsonParser.parseResultMarcadores(obj)
 
-                    //reiniciarMarcadoresMapa()
-                    aniadirTodosMarcadoresMapa()
+                    reiniciarMarcadoresMapa()
                 }
             } catch (e : MalformedURLException){
                 e.printStackTrace()
@@ -173,8 +230,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     progressDialog.dismiss()
                 }
             })
-
-            //repeat(10){pasarSiguienteMarcador()}
         }
     }
 
@@ -404,7 +459,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun pasarSiguienteMarcador(){
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
-
             flechaDibujada = false
         })
 
