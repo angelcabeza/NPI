@@ -155,18 +155,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (y > 70 && z > 0){
                         lastUpdate1 = horaActual
                     }
-                    if (x > 50){
+
+                    if ( ((horaActual - lastUpdate1) <= 400) && x > 50){
                         lastUpdate1 -= 400
                         swipeExit = true
                     }
-                    if (horaActual - lastUpdate1 <= 400 && y < 50 && x < 50 && x > -50 && z > 0){
+                    if ( ((horaActual - lastUpdate1) <= 400) && y < 50 && x < 50 && x > -50 && z > 0){
                         pasarSiguienteMarcador()
                         lastUpdate1 -= 400
                     }
-                    if (horaActual - lastUpdate1 <= 400 && y <85 && x < 50 && x > -50 && z < 0){
-                        lastUpdate1 -= 400
-                        rutaActiva = true
-                        fetchRuta().start()
+                    else{
+                        if( ((horaActual - lastUpdate1) <= 400) && y < 85 && x < 50 && x > -50 && z < 0) {
+                            lastUpdate1 -= 400
+                            rutaActiva = true
+                            fetchRuta().start()
+                        }
                     }
                 }
             }
