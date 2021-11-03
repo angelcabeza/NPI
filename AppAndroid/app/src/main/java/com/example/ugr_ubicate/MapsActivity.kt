@@ -94,8 +94,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var lastUpdate1: Long = 0
 
     //Estas son las variables que marcan si se ha hecho uno de los gestos. Después de usarlas ponlas a 0
-    private var swipeOff: Boolean = false
-    private var swipeOn: Boolean = false
     private var swipeExit: Boolean = false
 
 
@@ -158,14 +156,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         lastUpdate1 = horaActual
                     }
                     if (x > 50){
+                        lastUpdate1 += 400
                         swipeExit = true
                     }
                     if (horaActual - lastUpdate1 <= 400 && y < 50 && x < 50 && x > -50 && z > 0){
-                        swipeOff = true
                         pasarSiguienteMarcador()
+                        lastUpdate1 += 400
                     }
                     if (horaActual - lastUpdate1 <= 400 && y <85 && x < 50 && x > -50 && z < 0){
-                        swipeOn = true
+                        lastUpdate1 += 400
                         rutaActiva = true
                         fetchRuta().start()
                     }
