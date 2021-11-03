@@ -37,6 +37,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var instruccionesRuta1: Array<String> = arrayOf("Salga por la puerta de la clase", "Gire a la derecha", "Camine recto hasta encontrar la clase 3.6")
     private var instruccionesEscalera34: Array<String> = arrayOf("Gire a la derecha", "Ande todo recto hasta llegar a la clase 3.6")
     private lateinit var  instrucciones: TextView
+    private lateinit var textGesto: TextView
     private var primeraInstruccionRuta36 = false
     private var segundaInstruccionRuta36 = false
     private var terceraInstruccionRuta36 = false
@@ -53,12 +54,9 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var last_x =0f
     private var last_y = 0f
     private var last_z = 0f
-    private val SHAKE_THRESHOLD = 400
+    private val SHAKE_THRESHOLD = 200
     var agitacionDetectada1 = false
     var agitacionDetectada2 = false
-    private lateinit var xAcc : TextView
-    private lateinit var yAcc : TextView
-    private lateinit var zAcc : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,21 +70,21 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             perdido = true
 
         instrucciones = findViewById(R.id.instruccionesContainer)
+        textGesto = findViewById(R.id.textGesto)
 
 
         val titulo = findViewById<TextView>(R.id.titulo)
         val ruta1 = findViewById<Button>(R.id.ruta1)
-        xAcc = findViewById(R.id.xAcc)
-        yAcc = findViewById(R.id.yAcc)
-        zAcc = findViewById(R.id.zAcc)
 
 
-        if (!perdido)
+        if (!perdido) {
             instrucciones.visibility = View.INVISIBLE
-        else{
+            textGesto.visibility = View.INVISIBLE
+        } else{
             titulo.visibility = View.INVISIBLE
             ruta1.visibility = View.INVISIBLE
             instrucciones.text = instruccionesEscalera34[cont]
+            textGesto.visibility = View.VISIBLE
         }
 
         if (!perdido) {
@@ -95,6 +93,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 ruta1.visibility = View.INVISIBLE
                 instrucciones.text = instruccionesRuta1[cont]
                 instrucciones.visibility = View.VISIBLE
+                textGesto.visibility = View.VISIBLE
             }
         }
 
@@ -112,16 +111,12 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
 
         //evento de acelerometro lineal (desprecia la gravedad, el normal siempre pilla la gravedad)
-        if (event!!.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+        if (event!!.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             //Se obtienen los valores nuevos
             val new_x = event!!.values[0]
             val new_y = event!!.values[1]
             val new_z = event!!.values[2]
 
-            xAcc.text = new_x.toString()
-            yAcc.text = new_y.toString()
-            zAcc.text = new_z.toString()
-            
             // Se obtiene la hora actual
             val horaActual = System.currentTimeMillis()
 
@@ -132,8 +127,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 lastUpdate = horaActual
                 val velocidad: Float = Math.abs(new_y - last_y) / diferencia * 10000
 
+                val norm_vector = Math.sqrt(new_x.toDouble() * new_x.toDouble() + new_y.toDouble() * new_y.toDouble() + new_z.toDouble() * new_z.toDouble())
+
+                val norm_y = new_y / norm_vector
+
+                val inclination = Math.round(Math.toDegrees(Math.acos(norm_y))).toInt();
+
                 // Si la velocidad es suficiente y el movil no se ha girado en el eje X
-                if (velocidad >= SHAKE_THRESHOLD && new_x > -30 && new_x <= 30 && new_z > -30 && new_z > 30) {
+                if (velocidad >= SHAKE_THRESHOLD && (inclination <= 20)) {
                     if (!agitacionDetectada1)
                         agitacionDetectada1 = true
                     else
@@ -191,7 +192,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         sensorBrujula = sensorManagerBrujula.getDefaultSensor((Sensor.TYPE_ORIENTATION))
         sensorManagerBrujula?.registerListener(this, sensorBrujula, SensorManager.SENSOR_DELAY_NORMAL)
 
-        sensorAcelerometro = sensorManagerAcelerometro.getDefaultSensor((Sensor.TYPE_LINEAR_ACCELERATION))
+        sensorAcelerometro = sensorManagerAcelerometro.getDefaultSensor((Sensor.TYPE_ACCELEROMETER))
         sensorManagerAcelerometro?.registerListener(this, sensorAcelerometro, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
@@ -207,6 +208,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             cont++
             instrucciones.text = instruccionesRuta1[cont]
             segundaInstruccionRuta36 = true
+            currentSteps = 0
         }
         else if (primeraInstruccionRuta36 && segundaInstruccionRuta36 && currentSteps >= 5){
             instrucciones.text = "¡Ha llegado a su destino!"
