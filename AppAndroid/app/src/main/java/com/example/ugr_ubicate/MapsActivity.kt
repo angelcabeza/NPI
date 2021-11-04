@@ -598,10 +598,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        var dataList : HashMap<String, Object> = HashMap()
-        dataList.put("lat", 37.197282 as Object)
-        dataList.put("lon", -3.624350 as Object)
-        dataList.put("name", "ETSIIT" as Object)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ){
+
+        }
+
+        var etsiitMarcador : HashMap<String, Object> = HashMap()
+        etsiitMarcador.put("lat", 37.197282 as Object)
+        etsiitMarcador.put("lon", -3.624350 as Object)
+        etsiitMarcador.put("name", "ETSIIT" as Object)
+
+        var dataList : MutableList<HashMap<String, Object>> = ArrayList()
+        dataList.add(etsiitMarcador)
+        marcadoresList = dataList
 
         currentMarker = 0
 
@@ -784,7 +794,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     Toast.makeText(applicationContext, "$name permission granted", Toast.LENGTH_SHORT).show()
                 }
 
-                shouldShowRequestPermissionRationale(permission) -> showDialog(permission,name,requestCode)
+                //shouldShowRequestPermissionRationale(permission) -> showDialog(permission,name,requestCode)
 
                 else -> ActivityCompat.requestPermissions(this,arrayOf(permission), requestCode)
             }
@@ -795,7 +805,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         fun innerCheck(name: String) {
             if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(applicationContext, "Permiso de $name actualmente denegado", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(applicationContext, "Permiso de $name actualmente denegado", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(applicationContext, "Permiso de $name concedido", Toast.LENGTH_SHORT).show()
 
