@@ -161,14 +161,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         swipeExit = true
                     }
                     if ( ((horaActual - lastUpdate1) <= 400) && y < 50 && x < 50 && x > -50 && z > 0){
-                        pasarSiguienteMarcador()
+                        this@MapsActivity.runOnUiThread(Runnable {
+                            pasarSiguienteMarcador()
+                        })
                         lastUpdate1 -= 400
                     }
                     else{
                         if( ((horaActual - lastUpdate1) <= 400) && y < 85 && x < 50 && x > -50 && z < 0) {
                             lastUpdate1 -= 400
                             rutaActiva = true
-                            fetchRuta().start()
+                            this@MapsActivity.runOnUiThread(Runnable {
+                                fetchRuta().start()
+                            })
                         }
                     }
                 }
@@ -712,6 +716,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (rutaActiva) {
             comprobarUsuarioEnMarcadorRuta()
             actualizarFlechaMarcador()
+            Log.e("Activar flecha", "onLocationChanged")
         }
     }
 
