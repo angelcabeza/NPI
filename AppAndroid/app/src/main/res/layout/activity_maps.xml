@@ -25,14 +25,16 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_find"
-            android:text="Buscar"/>
+            android:id="@+id/bt_ubicacion"
+            android:text="Ubicacion"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_ruta"
-            android:text="Iniciar ruta"/>
+            android:id="@+id/bt_find"
+            android:text="Buscar"/>
+
+
 
     </LinearLayout>
 

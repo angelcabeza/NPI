@@ -15,6 +15,7 @@ import android.location.Location
 import android.os.*
 import android.util.Log
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -38,6 +39,12 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.SphericalUtil
+import android.content.DialogInterface
+
+import android.content.Intent
+
+import android.location.LocationManager
+import android.provider.Settings
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -50,7 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var spType : Spinner
     private lateinit var btFind : Button
-    private lateinit var btRuta : Button
+    private lateinit var btUbicacion : Button
 
     private var mainHandler : Handler = Handler()
     private lateinit var progressDialog : ProgressDialog
@@ -71,7 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var ruta : objectRuta? = null
     private var currentMarcadorRuta : Int = -1
     private var coordMarcadorRuta : LatLng? = null
-    private val distanciaMinMarcador : Float = 5F
+    private val distanciaMinMarcador : Float = 20F
     private var rutaActiva : Boolean = false
 
     private var mLocationRequest: LocationRequest? = null
@@ -103,7 +110,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ///
         super.onCreate(savedInstanceState)
 
-        solicitarPermisoInternet()
+        checkForPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Ubicacion",
+            REQUEST_PERMISSION_CODE)
+        statusCheck()
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -112,7 +121,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         spType = findViewById(R.id.sp_type)
         btFind = findViewById(R.id.bt_find)
-        btRuta = findViewById(R.id.bt_ruta)
+        btUbicacion = findViewById(R.id.bt_ubicacion)
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
@@ -121,7 +130,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         obtenerUltimaUbicacion()
-
         startLocationUpdates()
 
         btFind.setOnClickListener{
@@ -130,9 +138,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             fetchMarcadores().start()
         }
 
-        btRuta.setOnClickListener{
-            rutaActiva = true
-            fetchRuta().start()
+        btUbicacion.setOnClickListener{
+            this@MapsActivity.runOnUiThread(Runnable {
+                statusCheck()
+                obtenerUltimaUbicacion()
+                startLocationUpdates()
+            })
         }
 
         var sm = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -162,7 +173,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     if ( ((horaActual - lastUpdate1) <= 400) && y < 50 && x < 50 && x > -50 && z > 0){
                         this@MapsActivity.runOnUiThread(Runnable {
-                            pasarSiguienteMarcador()
+                            if (currentMarker == -1){
+                                currentPlace = spType.selectedItemPosition
+
+                                fetchMarcadores().start()
+                            }
+                            else{
+                                pasarSiguienteMarcador()
+                            }
                         })
                         lastUpdate1 -= 400
                     }
@@ -186,56 +204,60 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var data : String = ""
 
         override public fun run(){
-            mainHandler.post(Runnable {
-                progressDialog = ProgressDialog(this@MapsActivity)
-                progressDialog.setMessage("Leyendo marcadores")
-                progressDialog.setCancelable(false)
-                progressDialog.show()
-            })
+            if (latitudUsuario != null && longitudUsuario != null && currentPlace != -1){
+                rutaActiva = false
 
-            val url_str: String = getUrlForMarcadores()
+                mainHandler.post(Runnable {
+                    progressDialog = ProgressDialog(this@MapsActivity)
+                    progressDialog.setMessage("Leyendo marcadores")
+                    progressDialog.setCancelable(false)
+                    progressDialog.show()
+                })
 
-            try{
-                var url : URL = URL(url_str)
+                val url_str: String = getUrlForMarcadores()
 
-                var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
+                try{
+                    var url : URL = URL(url_str)
 
-                var inputStream : InputStream = httpsURLConnection.inputStream
+                    var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
 
-                var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
+                    var inputStream : InputStream = httpsURLConnection.inputStream
 
-                var line : String? = null
+                    var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
 
-                line = bufferedReader.readLine()
-
-                while ( line != null ){
-                    data = data + line
+                    var line : String? = null
 
                     line = bufferedReader.readLine()
+
+                    while ( line != null ){
+                        data = data + line
+
+                        line = bufferedReader.readLine()
+                    }
+
+                    if (! data.isEmpty()){
+                        val jsonParser : JsonParser = JsonParser()
+
+                        var obj : JSONObject = JSONObject(data)
+
+                        marcadoresList = jsonParser.parseResultMarcadores(obj)
+
+                        reiniciarMarcadoresMapa()
+                    }
+                } catch (e : MalformedURLException){
+                    e.printStackTrace()
+                } catch (e : IOException){
+                    e.printStackTrace()
+                } catch (e : JSONException){
+                    e.printStackTrace()
                 }
 
-                if (! data.isEmpty()){
-                    val jsonParser : JsonParser = JsonParser()
-
-                    var obj : JSONObject = JSONObject(data)
-
-                    marcadoresList = jsonParser.parseResultMarcadores(obj)
-
-                    reiniciarMarcadoresMapa()
-                }
-            } catch (e : MalformedURLException){
-                e.printStackTrace()
-            } catch (e : IOException){
-                e.printStackTrace()
-            } catch (e : JSONException){
-                e.printStackTrace()
+                mainHandler.post(Runnable {
+                    if(progressDialog.isShowing){
+                        progressDialog.dismiss()
+                    }
+                })
             }
-
-            mainHandler.post(Runnable {
-                if(progressDialog.isShowing){
-                    progressDialog.dismiss()
-                }
-            })
         }
     }
 
@@ -243,58 +265,60 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var data : String = ""
 
         override public fun run(){
-            mainHandler.post(Runnable {
-                progressDialog = ProgressDialog(this@MapsActivity)
-                progressDialog.setMessage("Leyendo ruta")
-                progressDialog.setCancelable(false)
-                progressDialog.show()
-            })
+            if (currentMarker != -1 && longitudUsuario != null && latitudUsuario != null){
+                mainHandler.post(Runnable {
+                    progressDialog = ProgressDialog(this@MapsActivity)
+                    progressDialog.setMessage("Leyendo ruta")
+                    progressDialog.setCancelable(false)
+                    progressDialog.show()
+                })
 
-            val url_str: String = getUrlForRoute()
+                val url_str: String = getUrlForRoute()
 
-            try{
-                var url : URL = URL(url_str)
+                try{
+                    var url : URL = URL(url_str)
 
-                var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
+                    var httpsURLConnection : HttpsURLConnection = url.openConnection() as HttpsURLConnection
 
-                var inputStream : InputStream = httpsURLConnection.inputStream
+                    var inputStream : InputStream = httpsURLConnection.inputStream
 
-                var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
+                    var bufferedReader : BufferedReader = BufferedReader(InputStreamReader(inputStream))
 
-                var line : String? = null
-
-                line = bufferedReader.readLine()
-
-                while ( line != null ){
-                    data = data + line
+                    var line : String? = null
 
                     line = bufferedReader.readLine()
+
+                    while ( line != null ){
+                        data = data + line
+
+                        line = bufferedReader.readLine()
+                    }
+
+                    if (! data.isEmpty()){
+                        val jsonParser : JsonParser = JsonParser()
+
+                        var obj : JSONObject = JSONObject(data)
+
+                        ruta = jsonParser.parseResultRuta(obj)
+
+                        actualizarMarcadorRuta(0)
+
+                        mostrarRuta()
+                    }
+                } catch (e : MalformedURLException){
+                    e.printStackTrace()
+                } catch (e : IOException){
+                    e.printStackTrace()
+                } catch (e : JSONException){
+                    e.printStackTrace()
                 }
 
-                if (! data.isEmpty()){
-                    val jsonParser : JsonParser = JsonParser()
-
-                    var obj : JSONObject = JSONObject(data)
-
-                    ruta = jsonParser.parseResultRuta(obj)
-
-                    actualizarMarcadorRuta(0)
-
-                    mostrarRuta()
-                }
-            } catch (e : MalformedURLException){
-                e.printStackTrace()
-            } catch (e : IOException){
-                e.printStackTrace()
-            } catch (e : JSONException){
-                e.printStackTrace()
+                mainHandler.post(Runnable {
+                    if(progressDialog.isShowing){
+                        progressDialog.dismiss()
+                    }
+                })
             }
-
-            mainHandler.post(Runnable {
-                if(progressDialog.isShowing){
-                    progressDialog.dismiss()
-                }
-            })
         }
     }
 
@@ -389,6 +413,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         actualizarFlechaMarcador()
+        Log.e("Activar flecha", "mostrarPuntosRuta")
 
         this@MapsActivity.runOnUiThread(Runnable {
             if (latitudUsuario != null && longitudUsuario != null){
@@ -463,6 +488,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun pasarSiguienteMarcador(){
+        rutaActiva = false
+
         this@MapsActivity.runOnUiThread(Runnable {
             map.clear()
             flechaDibujada = false
@@ -491,6 +518,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     LatLng(lat, lng), 13.0F)
                 )
             })
+        }
+        else{
+            currentMarker = -1
         }
     }
 
@@ -536,7 +566,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     // Ver la ultima ubicacion del ususario
     private fun obtenerUltimaUbicacion() {
-        solicitarPermisoUbicacionPrecisa()
+        checkForPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Ubicacion",
+            REQUEST_PERMISSION_CODE)
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
@@ -563,30 +594,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Comprobar y solicitar el permiso de ubicacion precisa
-    fun solicitarPermisoUbicacionPrecisa(){
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED){
-
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_PERMISSION_CODE)
-        }
-    }
-
-    // Solicitar permisos
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (REQUEST_PERMISSION_CODE == requestCode){
-            if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(this, "Permiso denegado", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
@@ -598,24 +605,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         currentMarker = 0
 
+        activarUbicacionEnMapa()
+
         // Add a marker in ETSIIT and move the camera
         val marcador = LatLng(37.197282, -3.624350)
         map.addMarker(MarkerOptions().position(marcador).title("ETSIIT"))
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(marcador, 17.0F))
-
-        /*var points: ArrayList<LatLng> = ArrayList<LatLng>()
-        var lineOptions: PolylineOptions = PolylineOptions()
-
-        points.add(LatLng(37.197282, -3.624350))
-        points.add(LatLng(37.121341, -3.631489))
-
-        lineOptions.addAll(points)
-        lineOptions.width(12f)
-        lineOptions.color(Color.RED)
-        lineOptions.geodesic(true)
-        */
-
-        activarUbicacionEnMapa()
 
         if (latitudUsuario != null && longitudUsuario != null){
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(
@@ -661,16 +656,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
         ) {
-            solicitarPermisoUbicacionPrecisa()
+            checkForPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Ubicacion",
+                REQUEST_PERMISSION_CODE)
         }
 
         map.isMyLocationEnabled = true
     }
 
 
+    private fun statusCheck() {
+        val manager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps()
+        }
+    }
+
+    private fun buildAlertMessageNoGps() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage("Parece que el GPS esta desactivado, quieres activarlo?")
+            .setCancelable(false)
+            .setPositiveButton(
+                "Si"
+            ) { dialog, id -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
+            .setNegativeButton(
+                "No"
+            ) { dialog, id -> dialog.cancel() }
+        val alert = builder.create()
+        alert.show()
+    }
+
+
     // Trigger new location updates at interval
     private fun startLocationUpdates() {
-
         // Create the location request to start receiving updates
         mLocationRequest = LocationRequest()
         mLocationRequest!!.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -716,7 +733,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (rutaActiva) {
             comprobarUsuarioEnMarcadorRuta()
             actualizarFlechaMarcador()
-            Log.e("Activar flecha", "onLocationChanged")
         }
     }
 
@@ -759,4 +775,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         flechaDibujada = true
     }
 
+
+    // MANAGE PERMISSION
+    private fun checkForPermission(permission: String, name: String, requestCode: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            when {
+                ContextCompat.checkSelfPermission(applicationContext,permission) == PackageManager.PERMISSION_GRANTED -> {
+                    Toast.makeText(applicationContext, "$name permission granted", Toast.LENGTH_SHORT).show()
+                }
+
+                shouldShowRequestPermissionRationale(permission) -> showDialog(permission,name,requestCode)
+
+                else -> ActivityCompat.requestPermissions(this,arrayOf(permission), requestCode)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        fun innerCheck(name: String) {
+            if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(applicationContext, "Permiso de $name actualmente denegado", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(applicationContext, "Permiso de $name concedido", Toast.LENGTH_SHORT).show()
+
+                this@MapsActivity.runOnUiThread(Runnable {
+                    supportMapFragment.getMapAsync(this)
+                })
+            }
+        }
+
+        when(requestCode) {
+            REQUEST_PERMISSION_CODE  -> innerCheck("Ubicacion")
+        }
+    }
+
+    private fun showDialog(permission: String, name: String, requestCode: Int) {
+        val builder = AlertDialog.Builder(this)
+
+        builder.apply {
+            setMessage("Los permisos para acceder a su $name son necesarios para utilizar la app")
+            setTitle("Permisos requeridos")
+            setPositiveButton("OK") { dialog, wich ->
+                ActivityCompat.requestPermissions(this@MapsActivity, arrayOf(permission),requestCode)
+            }
+        }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
 }
