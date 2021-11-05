@@ -4,6 +4,11 @@
 Created on Thu Nov  4 10:39:06 2021
 
 @author: angel perro
+
+
+    HELLO WORLD DE PYTHON:
+https://developer-archive.leapmotion.com/documentation/v2/python/devguide/Sample_Tutorial.html?proglang=python
+
 """
 
 
@@ -30,7 +35,11 @@ def button_sitios():
 
 
 def main():
-    # Crear ka ventana
+    ##############################################################################################################
+    ##############################################################################################################
+    ##############################################################################################################
+    # Crear la interfaz grafica
+    # Crear la ventana
     main_window = tk.Tk()
     main_window.geometry("500x500")
     main_window.title("LeapApp")
@@ -39,19 +48,32 @@ def main():
     tk.Label(main_window, text="¿Que desea?",justify="left",font=("Helvetica",30)).grid(row=0, column = 3)
 
     # Botones
+    anchura_boton = 95
+    altura_boton  = 50
         #Fila de arriba
-    tk.Button(main_window, text="Sitios de interes", padx=95, pady=50, command=button_sitios).grid(row=1, column = 2, padx=35)
-    tk.Button(main_window, text="Ir a clase", padx=95, pady=50).grid(row=1,column=3, padx = 200 ,pady=100)
-    tk.Button(main_window, text="Horario", padx=95, pady=50).grid(row=1,column=4)
+    tk.Button(main_window, text="Sitios de interes", padx=anchura_boton, pady=altura_boton,
+              command=button_sitios).grid(row=1, column = 2, padx=35)
+    
+    tk.Button(main_window, text="Ir a clase", padx=anchura_boton,
+              pady=altura_boton).grid(row=1,column=3, padx = 200 ,pady=100)
+    
+    tk.Button(main_window, text="Horario", padx=anchura_boton, pady=altura_boton).grid(row=1,column=4)
     
         # Fila de abajo
-    tk.Button(main_window, text="Relleno", padx=95, pady=50).grid(row=2,column=2)
-    tk.Button(main_window, text="Relleno", padx=95, pady=50).grid(row=2,column=3)
-    tk.Button(main_window, text="Relleno", padx=95, pady=50).grid(row=2,column=4)
+    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=2)
+    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=3)
+    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=4)
     
     # Ventana principal
     main_window.wm_state('zoomed')
     main_window.mainloop()
+    
+    
+    ##############################################################################################################
+    ##############################################################################################################
+    ##############################################################################################################
+    # Controlador de LEAP
+    controller = Leap.Controller()
     
 
 
