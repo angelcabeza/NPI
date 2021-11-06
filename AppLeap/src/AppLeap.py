@@ -22,6 +22,11 @@ import Leap
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
+ANCHO_INTERFAZ = 500
+ALTO_INTERFAZ = 500
+RADIO_PUNTERO = 20
+
+
 
 
 class SampleListener(Leap.Listener):
@@ -55,6 +60,18 @@ class SampleListener(Leap.Listener):
         print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
 
+        # Cambiar puntero en pantalla
+        pointable = frame.pointables.frontmost
+        if pointable.is_valid:
+            iBox = frame.interaction_box
+            leapPoint = pointable.stabilized_tip_position
+            normalizedPoint = iBox.normalize_point(leapPoint, False)
+            
+            app_x = normalizedPoint.x * ANCHO_INTERFAZ
+            app_y = (1 - normalizedPoint.y) * ALTO_INTERFAZ
+            
+            actualizar_puntero(app_x, app_y)
+    
         # Get hands
         for hand in frame.hands:
 
@@ -169,29 +186,30 @@ def button_sitios():
     top.wm_state('zoomed')
 
 
+def actualizar_puntero(new_x, new_y):
+    x, y = new_x + 3, new_y + 7  
+    #the addition is just to center the oval around the center of the mouse
+    #remove the the +3 and +7 if you want to center it around the point of the mouse
+    global circle
+    global canvas
+    
+    canvas.delete(circle)  #to refresh the circle each motion
+
+    x_max = x + RADIO_PUNTERO
+    x_min = x - RADIO_PUNTERO
+    y_max = y + RADIO_PUNTERO
+    y_min = y - RADIO_PUNTERO
+
+    circle = canvas.create_oval(x_max, y_max, x_min, y_min, outline="black")
+    
+    
 
 
-
-def main():
-    ##############################################################################################################
-    ##############################################################################################################
-    ##############################################################################################################
-    # Controlador de LEAP y Listener
-    controller = Leap.Controller()
-    listener = SampleListener()
-    
-    # Aniadir el listener
-    controller.add_listener(listener)
-    
-    
-    
-    ##############################################################################################################
-    ##############################################################################################################
-    ##############################################################################################################
-    # Crear la interfaz grafica
+def init_interfaz():
     # Crear la ventana
     main_window = tk.Tk()
-    main_window.geometry("500x500")
+    
+    main_window.geometry(str(ANCHO_INTERFAZ) + "x" + str(ALTO_INTERFAZ))
     main_window.title("LeapApp")
     
     # Etiquetas
@@ -214,9 +232,42 @@ def main():
     tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=3)
     tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=4)
     
+        # Puntero
+    global circle
+    circle = 0
+        
+    global canvas
+    canvas = tk.Canvas(main_window)
+    canvas.pack()
+    
+    prueba = 10
+    actualizar_puntero(prueba, prueba)
+    
     # Ventana principal
-    main_window.wm_state('zoomed')
+    #main_window.wm_state('zoomed')
     main_window.mainloop()
+    
+
+
+
+def main():
+    ##############################################################################################################
+    ##############################################################################################################
+    ##############################################################################################################
+    # Controlador de LEAP y Listener
+    controller = Leap.Controller()
+    listener = SampleListener()
+    
+    # Aniadir el listener
+    controller.add_listener(listener)
+    
+    
+    
+    ##############################################################################################################
+    ##############################################################################################################
+    ##############################################################################################################
+    # Crear la interfaz grafica
+    init_interfaz()
     
     
     
