@@ -58,6 +58,16 @@
             android:exported="true"
             android:label="qrActivity"
         />
+        <activity
+            android:name=".TouchActivity"
+            android:exported="true"
+            android:label="touch"
+            />
+        <activity
+            android:name=".TimeTableActivity"
+            android:exported="true"
+            android:label="TimeTableActivity"
+            />
     </application>
 
 </manifest>

@@ -4,28 +4,47 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    tools:openDrawer= "start">
+
 
     <Button
         android:id="@+id/irClases"
         android:layout_width="191dp"
         android:layout_height="66dp"
         android:text="Ir a Clases"
-        android:translationX="100px"
+        android:translationX="270px"
         android:translationY="100px"
         android:visibility="visible"
-        tools:layout_editor_absoluteX="79dp"
-        tools:layout_editor_absoluteY="127dp"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="83dp"
+        tools:layout_editor_absoluteY="257dp" />
+
+    <Button
+        android:id="@+id/layout_touch"
+        android:layout_width="191dp"
+        android:layout_height="66dp"
+        android:layout_marginTop="8dp"
+        android:text="Prueba Slides"
+        android:translationX="270px"
+        android:translationY="100px"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@+id/irClases"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/irClases"
+        app:layout_constraintTop_toBottomOf="@+id/irClases"
         tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/irSitios"
-        android:layout_width="192dp"
-        android:layout_height="63dp"
+        android:layout_width="191dp"
+        android:layout_height="66dp"
         android:layout_marginTop="8dp"
+        android:alpha="25"
         android:text="Buscar Sitios"
-        android:translationX="100px"
-        android:translationY="500px"
+        android:translationX="270px"
+        android:translationY="300px"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@+id/irClases"
         app:layout_constraintStart_toStartOf="@+id/irClases"
         app:layout_constraintTop_toBottomOf="@+id/irClases"
