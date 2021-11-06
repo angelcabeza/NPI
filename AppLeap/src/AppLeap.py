@@ -223,8 +223,15 @@ def main():
     ##############################################################################################################
     ##############################################################################################################
     ##############################################################################################################
-    # Quitar el listener
-    controller.remove_listener(listener)
+    # Finalizar el programa con la tecla ENTER
+    print ("Press Enter to quit...")
+    try:
+        sys.stdin.readline()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Quitar el listener
+        controller.remove_listener(listener)
     
 
 
