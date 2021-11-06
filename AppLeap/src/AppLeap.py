@@ -22,9 +22,12 @@ import Leap
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
-ANCHO_INTERFAZ = 500
-ALTO_INTERFAZ = 500
+ANCHO_INTERFAZ = 1500
+ALTO_INTERFAZ = 700
 RADIO_PUNTERO = 20
+
+
+path_puntero = "../imagenes/puntero.png"
 
 
 
@@ -33,6 +36,9 @@ class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    dedos_extendidos = False
+    dedos_cerrados_tras_extendidos = False
+    tiempo_ultimo_extendidos = 0
 
     def on_init(self, controller):
         print "Initialized"
@@ -70,7 +76,8 @@ class SampleListener(Leap.Listener):
             app_x = normalizedPoint.x * ANCHO_INTERFAZ
             app_y = (1 - normalizedPoint.y) * ALTO_INTERFAZ
             
-            actualizar_puntero(app_x, app_y)
+            actualizar_puntero_general(app_x, app_y)
+            actualizar_puntero_sitios(app_x, app_y)
     
         # Get hands
         for hand in frame.hands:
@@ -97,6 +104,8 @@ class SampleListener(Leap.Listener):
                 arm.wrist_position,
                 arm.elbow_position)
 
+
+            extendedFingers = 0
             # Get fingers
             for finger in hand.fingers:
 
@@ -105,6 +114,10 @@ class SampleListener(Leap.Listener):
                     finger.id,
                     finger.length,
                     finger.width)
+                
+                if finger.extended:
+                    extendedFingers = extendedFingers + 1
+                
 
                 # Get bones
                 for b in range(0, 4):
@@ -114,6 +127,19 @@ class SampleListener(Leap.Listener):
                         bone.prev_joint,
                         bone.next_joint,
                         bone.direction)
+            
+            if extendedFingers == 5 and not self.dedos_cerrados_tras_extendidos:
+                self.tiempo_ultimo_extendidos = time.time()
+                self.dedos_extendidos = True
+            elif extendedFingers == 0 and self.dedos_extendidos:
+                self.dedos_cerrados_tras_extendidos = True
+            elif extendedFingers == 5 and self.dedos_cerrados_tras_extendidos:
+                tiempo_volver_abrir = time.time()
+                tiempo_cerrados = tiempo_ultimo_extendidos - tiempo_volver_abrir
+                usuario_click(tiempo_cerrados)
+            else:
+                self.dedos_extendidos = False
+                self.dedos_cerrados_tras_extendidos = False
 
         # Get tools
         for tool in frame.tools:
@@ -184,23 +210,37 @@ def button_sitios():
     top = tk.Toplevel()
     top.title('Sitios de interes')
     top.wm_state('zoomed')
-
-
-def actualizar_puntero(new_x, new_y):
-    x, y = new_x + 3, new_y + 7  
-    #the addition is just to center the oval around the center of the mouse
-    #remove the the +3 and +7 if you want to center it around the point of the mouse
-    global circle
-    global canvas
     
-    canvas.delete(circle)  #to refresh the circle each motion
+    top.update()
+    screen_width = top.winfo_screenwidth()
+    screen_height = top.winfo_screenheight()  
+    
+    global local_canvas
+    
+    local_canvas = tk.Canvas(top, width=screen_width, height=screen_height)
+    local_canvas.place(x=screen_width/2, y=screen_height/2)
+    
+    init_puntero_sitios(1515, 780)
 
-    x_max = x + RADIO_PUNTERO
-    x_min = x - RADIO_PUNTERO
-    y_max = y + RADIO_PUNTERO
-    y_min = y - RADIO_PUNTERO
 
-    circle = canvas.create_oval(x_max, y_max, x_min, y_min, outline="black")
+def init_puntero_sitios(x_puntero, y_puntero):
+    global local_canvas    
+    global btn_puntero_sitios
+    
+    # Puntero
+    btn_puntero_sitios = tk.Button(local_canvas, background ='black')    
+    btn_puntero_sitios.place(x=x_puntero, y=y_puntero, width=20, height=20)
+        
+    local_canvas.pack()
+
+
+def actualizar_puntero_sitios(x_puntero, y_puntero):
+    global btn_puntero_sitios
+    
+    btn_puntero_sitios.place_forget()
+
+    init_puntero_sitios(x_puntero, y_puntero)
+    
     
     
 
@@ -209,44 +249,88 @@ def init_interfaz():
     # Crear la ventana
     main_window = tk.Tk()
     
-    main_window.geometry(str(ANCHO_INTERFAZ) + "x" + str(ALTO_INTERFAZ))
+#    main_window.geometry(str(ANCHO_INTERFAZ) + "x" + str(ALTO_INTERFAZ+50))
     main_window.title("LeapApp")
+    main_window.wm_state('zoomed')
     
     # Etiquetas
-    tk.Label(main_window, text="¿Que desea?",justify="left",font=("Helvetica",30)).grid(row=0, column = 3)
+    title = tk.Label(main_window, text="¿Que desea?", font=("Helvetica",30))
+    title.pack()
 
-    # Botones
-    anchura_boton = 95
-    altura_boton  = 50
-        #Fila de arriba
-    tk.Button(main_window, text="Sitios de interes", padx=anchura_boton, pady=altura_boton,
-              command=button_sitios).grid(row=1, column = 2, padx=35)
+    main_window.update()
+    screen_width = main_window.winfo_screenwidth()
+    screen_height = main_window.winfo_screenheight()  
+        
     
-    tk.Button(main_window, text="Ir a clase", padx=anchura_boton,
-              pady=altura_boton).grid(row=1,column=3, padx = 200 ,pady=100)
+    global canvas
+    canvas = tk.Canvas(main_window, width=screen_width, height=screen_height)
+    canvas.place(x=screen_width/2, y=screen_height/2)
     
-    tk.Button(main_window, text="Horario", padx=anchura_boton, pady=altura_boton).grid(row=1,column=4)
+    crear_botones()
+    
+    # de 0,0 a 1500,700
+    init_puntero_general(0, 0)
+        
+    # Ventana principal
+    main_window.mainloop()
+
+
+
+def crear_botones():
+    global canvas
+    
+    anchura_boton = 300
+    altura_boton  = 150
+    
+        # Fila de arriba
+    btn_1 = tk.Button(canvas, text="Sitios de interes", bd='10', command=button_sitios)
+    btn_2 = tk.Button(canvas, text="Ir a clase", bd='10')
+    btn_3 = tk.Button(canvas, text="Horario", bd='10')
     
         # Fila de abajo
-    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=2)
-    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=3)
-    tk.Button(main_window, text="Relleno", padx=anchura_boton, pady=altura_boton).grid(row=2,column=4)
+    btn_4 = tk.Button(canvas, text="Relleno", bd='10')
+    btn_5 = tk.Button(canvas, text="Relleno", bd='10')
+    btn_6 = tk.Button(canvas, text="Relleno", bd='10')
     
-        # Puntero
-    global circle
-    circle = 0
+#    btn_1.grid(row=0,column=0, padx=90, pady=90)
+#    btn_2.grid(row=0,column=1, padx=90, pady=90)
+#    btn_3.grid(row=0,column=2, padx=90, pady=90)
+#    btn_4.grid(row=1,column=0, padx=90, pady=90)
+#    btn_5.grid(row=1,column=1, padx=90, pady=90)
+#    btn_6.grid(row=1,column=2, padx=90, pady=90)
+    
+    btn_1.place(x=90, y=90, width=anchura_boton, height=altura_boton)
+    btn_2.place(x=90+500, y=90, width=anchura_boton, height=altura_boton)
+    btn_3.place(x=90+1000, y=90, width=anchura_boton, height=altura_boton)
+    btn_4.place(x=90, y=90+300, width=anchura_boton, height=altura_boton)
+    btn_5.place(x=90+500, y=90+300, width=anchura_boton, height=altura_boton)
+    btn_6.place(x=90+1000, y=90+300, width=anchura_boton, height=altura_boton)
         
-    global canvas
-    canvas = tk.Canvas(main_window)
     canvas.pack()
+
+
+def init_puntero_general(x_puntero, y_puntero):
+    global canvas    
+    global btn_puntero
+
+    # Puntero
+    btn_puntero = tk.Button(canvas, background ='black')    
+    btn_puntero.place(x=x_puntero, y=y_puntero, width=20, height=20)
+        
+    canvas.pack()
+
+
+def actualizar_puntero_general(x_puntero, y_puntero):
+    global btn_puntero
     
-    prueba = 10
-    actualizar_puntero(prueba, prueba)
-    
-    # Ventana principal
-    #main_window.wm_state('zoomed')
-    main_window.mainloop()
-    
+    btn_puntero.place_forget()
+
+    init_puntero_general(x_puntero, y_puntero)
+
+
+def usuario_click(tiempo_cerrados):
+    return
+
 
 
 
