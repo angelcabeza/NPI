@@ -7,6 +7,19 @@
     tools:context=".TimeTableActivity">
 
     <Button
+        android:id="@+id/button25"
+        android:layout_width="77dp"
+        android:layout_height="48dp"
+        android:text="N.P.I"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button18"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/button21"
+        app:layout_constraintTop_toBottomOf="@+id/button19"
+        app:layout_constraintVertical_bias="0.56"
+        tools:ignore="MissingConstraints" />
+
+    <Button
         android:id="@+id/button18"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -32,14 +45,26 @@
 
     <Button
         android:id="@+id/button16"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="280dp"
+        android:layout_width="77dp"
+        android:layout_height="48dp"
         android:text="N.P.I"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button18"
         app:layout_constraintStart_toEndOf="@+id/button21"
         app:layout_constraintTop_toBottomOf="@+id/button19"
+        app:layout_constraintVertical_bias="0.485"
+        tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="4dp"
+        android:text="N.P.I"
+        app:layout_constraintBottom_toTopOf="@+id/editTextTextPersonName"
+        app:layout_constraintEnd_toStartOf="@+id/button13"
+        app:layout_constraintStart_toEndOf="@+id/button10"
+        app:layout_constraintTop_toBottomOf="@+id/button6"
         tools:ignore="MissingConstraints" />
 
     <Button
@@ -116,13 +141,12 @@
 
     <Button
         android:id="@+id/button19"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="76dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
         android:text="N.P.I"
-        app:layout_constraintBottom_toTopOf="@+id/button16"
         app:layout_constraintEnd_toStartOf="@+id/button20"
         app:layout_constraintStart_toEndOf="@+id/button15"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName"
         tools:ignore="MissingConstraints" />
 
     <Button

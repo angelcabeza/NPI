@@ -37,12 +37,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        val buttonTemporal = findViewById<Button>(R.id.layout_touch)
-        buttonTemporal.setOnClickListener{
-            val intent = Intent(this, TouchActivity::class.java)
-            startActivity(intent)
-
-        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -72,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, MapsActivity::class.java)
                 startActivity(intent)
                 return true
-            } else if (yPos > lasty + 300) {
+            } else if (yPos < lasty - 300) {
                 lasty = yPos
                 val intent = Intent(this, TimeTableActivity::class.java)
                 startActivity(intent)
