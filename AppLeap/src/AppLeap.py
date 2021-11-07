@@ -22,8 +22,6 @@ import Leap
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
-ANCHO_INTERFAZ = 1500
-ALTO_INTERFAZ = 700
 RADIO_PUNTERO = 20
 
 
@@ -32,13 +30,31 @@ path_puntero = "../imagenes/puntero.png"
 
 
 
-class SampleListener(Leap.Listener):
+class SampleListenerConInterfaz(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
-    dedos_extendidos = False
-    dedos_cerrados_tras_extendidos = False
-    tiempo_ultimo_extendidos = 0
+    
+    
+    def __init__(self):
+        super(SampleListenerConInterfaz, self).__init__()  #Initialize like a normal listener
+        
+        self.dedos_extendidos = False
+        self.dedos_cerrados_tras_extendidos = False
+        self.tiempo_ultimo_extendidos = 0
+        self.canvas = None
+        self.local_canvas = None
+        self.btn_puntero_sitios = None
+        self.btn_puntero = None
+        self.main_window = None
+        self.top_window = None
+        self.pos_x_user = 0
+        self.pos_y_user = 0
+        self.ancho_ventana = 0
+        self.alto_ventana = 0
+        
+        self.init_interfaz()
+
 
     def on_init(self, controller):
         print "Initialized"
@@ -73,11 +89,12 @@ class SampleListener(Leap.Listener):
             leapPoint = pointable.stabilized_tip_position
             normalizedPoint = iBox.normalize_point(leapPoint, False)
             
-            app_x = normalizedPoint.x * ANCHO_INTERFAZ
-            app_y = (1 - normalizedPoint.y) * ALTO_INTERFAZ
+            self.get_dimensiones_actuales()
             
-            actualizar_puntero_general(app_x, app_y)
-            actualizar_puntero_sitios(app_x, app_y)
+            self.pos_x_user = normalizedPoint.x * self.ancho_ventana
+            self.pos_y_user = (1 - normalizedPoint.y) * self.alto_ventana
+            
+            self.actualizar_punteros()
     
         # Get hands
         for hand in frame.hands:
@@ -131,12 +148,19 @@ class SampleListener(Leap.Listener):
             if extendedFingers == 5 and not self.dedos_cerrados_tras_extendidos:
                 self.tiempo_ultimo_extendidos = time.time()
                 self.dedos_extendidos = True
+                
             elif extendedFingers == 0 and self.dedos_extendidos:
+                self.dedos_extendidos = False
                 self.dedos_cerrados_tras_extendidos = True
+                
             elif extendedFingers == 5 and self.dedos_cerrados_tras_extendidos:
+                self.dedos_extendidos = True
+                self.dedos_cerrados_tras_extendidos = False
+                
                 tiempo_volver_abrir = time.time()
-                tiempo_cerrados = tiempo_ultimo_extendidos - tiempo_volver_abrir
-                usuario_click(tiempo_cerrados)
+                tiempo_cerrados = self.tiempo_ultimo_extendidos - tiempo_volver_abrir
+                self.usuario_click(tiempo_cerrados)
+                
             else:
                 self.dedos_extendidos = False
                 self.dedos_cerrados_tras_extendidos = False
@@ -203,136 +227,186 @@ class SampleListener(Leap.Listener):
             return "STATE_INVALID"
 
 
-
-
-
-def button_sitios():
-    top = tk.Toplevel()
-    top.title('Sitios de interes')
-    top.wm_state('zoomed')
     
-    top.update()
-    screen_width = top.winfo_screenwidth()
-    screen_height = top.winfo_screenheight()  
-    
-    global local_canvas
-    
-    local_canvas = tk.Canvas(top, width=screen_width, height=screen_height)
-    local_canvas.place(x=screen_width/2, y=screen_height/2)
-    
-    init_puntero_sitios(1515, 780)
-
-
-def init_puntero_sitios(x_puntero, y_puntero):
-    global local_canvas    
-    global btn_puntero_sitios
-    
-    # Puntero
-    btn_puntero_sitios = tk.Button(local_canvas, background ='black')    
-    btn_puntero_sitios.place(x=x_puntero, y=y_puntero, width=20, height=20)
+    def init_interfaz(self):
+        # Crear la ventana
+        self.main_window = tk.Tk()
         
-    local_canvas.pack()
-
-
-def actualizar_puntero_sitios(x_puntero, y_puntero):
-    global btn_puntero_sitios
-    
-    btn_puntero_sitios.place_forget()
-
-    init_puntero_sitios(x_puntero, y_puntero)
-    
-    
-    
-
-
-def init_interfaz():
-    # Crear la ventana
-    main_window = tk.Tk()
-    
-#    main_window.geometry(str(ANCHO_INTERFAZ) + "x" + str(ALTO_INTERFAZ+50))
-    main_window.title("LeapApp")
-    main_window.wm_state('zoomed')
-    
-    # Etiquetas
-    title = tk.Label(main_window, text="¿Que desea?", font=("Helvetica",30))
-    title.pack()
-
-    main_window.update()
-    screen_width = main_window.winfo_screenwidth()
-    screen_height = main_window.winfo_screenheight()  
+#        main_window.geometry(str(ANCHO_INTERFAZ) + "x" + str(ALTO_INTERFAZ+50))
+        self.main_window.title("LeapApp")
+        self.main_window.wm_state('zoomed')
         
+        # Etiquetas
+        title = tk.Label(self.main_window, text="¿Que desea?", font=("Helvetica",30))
+        title.pack()
     
-    global canvas
-    canvas = tk.Canvas(main_window, width=screen_width, height=screen_height)
-    canvas.place(x=screen_width/2, y=screen_height/2)
-    
-    crear_botones()
-    
-    # de 0,0 a 1500,700
-    init_puntero_general(0, 0)
+        self.get_dimensiones_actuales()
+            
+        self.canvas = tk.Canvas(self.main_window, width=self.ancho_ventana, height=self.alto_ventana)
+        self.canvas.place(x=0, y=50)
         
-    # Ventana principal
-    main_window.mainloop()
-
-
-
-def crear_botones():
-    global canvas
-    
-    anchura_boton = 300
-    altura_boton  = 150
-    
-        # Fila de arriba
-    btn_1 = tk.Button(canvas, text="Sitios de interes", bd='10', command=button_sitios)
-    btn_2 = tk.Button(canvas, text="Ir a clase", bd='10')
-    btn_3 = tk.Button(canvas, text="Horario", bd='10')
-    
-        # Fila de abajo
-    btn_4 = tk.Button(canvas, text="Relleno", bd='10')
-    btn_5 = tk.Button(canvas, text="Relleno", bd='10')
-    btn_6 = tk.Button(canvas, text="Relleno", bd='10')
-    
-#    btn_1.grid(row=0,column=0, padx=90, pady=90)
-#    btn_2.grid(row=0,column=1, padx=90, pady=90)
-#    btn_3.grid(row=0,column=2, padx=90, pady=90)
-#    btn_4.grid(row=1,column=0, padx=90, pady=90)
-#    btn_5.grid(row=1,column=1, padx=90, pady=90)
-#    btn_6.grid(row=1,column=2, padx=90, pady=90)
-    
-    btn_1.place(x=90, y=90, width=anchura_boton, height=altura_boton)
-    btn_2.place(x=90+500, y=90, width=anchura_boton, height=altura_boton)
-    btn_3.place(x=90+1000, y=90, width=anchura_boton, height=altura_boton)
-    btn_4.place(x=90, y=90+300, width=anchura_boton, height=altura_boton)
-    btn_5.place(x=90+500, y=90+300, width=anchura_boton, height=altura_boton)
-    btn_6.place(x=90+1000, y=90+300, width=anchura_boton, height=altura_boton)
+        self.crear_botones()
         
-    canvas.pack()
-
-
-def init_puntero_general(x_puntero, y_puntero):
-    global canvas    
-    global btn_puntero
-
-    # Puntero
-    btn_puntero = tk.Button(canvas, background ='black')    
-    btn_puntero.place(x=x_puntero, y=y_puntero, width=20, height=20)
-        
-    canvas.pack()
-
-
-def actualizar_puntero_general(x_puntero, y_puntero):
-    global btn_puntero
+        # de 0,0 a 1500,700
+        self.init_puntero_general(self.ancho_ventana, self.alto_ventana)
+            
+        # Ventana principal
+        self.main_window.mainloop()
     
-    btn_puntero.place_forget()
+    
+    def get_dimensiones_actuales(self):
+        self.main_window.update()
+        self.ancho_ventana = self.main_window.winfo_screenwidth()
+        self.alto_ventana = self.main_window.winfo_screenheight()-115
+        
+        if self.top_window is not None:
+            self.ancho_ventana = self.top_window.winfo_screenwidth()
+            self.alto_ventana = self.top_window.winfo_screenheight() - 64
+    
+    
+    def crear_botones(self):        
+        anchura_boton = 300
+        altura_boton  = 150
+        
+            # Fila de arriba
+        btn_1 = tk.Button(self.canvas, text="Sitios de interes", bd='20', command=self.button_sitios_accion)
+        btn_2 = tk.Button(self.canvas, text="Ir a clase", bd='20')
+        btn_3 = tk.Button(self.canvas, text="Horario", bd='20')
+        
+            # Fila de abajo
+        btn_4 = tk.Button(self.canvas, text="Relleno", bd='20')
+        btn_5 = tk.Button(self.canvas, text="Relleno", bd='20')
+        btn_6 = tk.Button(self.canvas, text="Relleno", bd='20')
+        
+        btn_1.place(x=90, y=90, width=anchura_boton, height=altura_boton)
+        btn_2.place(x=90+500, y=90, width=anchura_boton, height=altura_boton)
+        btn_3.place(x=90+1000, y=90, width=anchura_boton, height=altura_boton)
+        btn_4.place(x=90, y=90+250, width=anchura_boton, height=altura_boton)
+        btn_5.place(x=90+500, y=90+250, width=anchura_boton, height=altura_boton)
+        btn_6.place(x=90+1000, y=90+250, width=anchura_boton, height=altura_boton)
+        
+        
+        btn_cerrar = tk.Button(self.canvas, text="Cerrar", bd='20', background='red',
+                               command=self.cerrar_window_general)
+        btn_cerrar.place(x=90+575, y=90+500, width=150, height=75)
+                
+    
+    def init_puntero_general(self, x_puntero, y_puntero):
+        x_puntero = x_puntero - 20
+        y_puntero = y_puntero - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+            
+        # Puntero
+        self.btn_puntero = tk.Button(self.canvas, background ='black')    
+        self.btn_puntero.place(x=x_puntero, y=y_puntero, width=20, height=20)
+                
+    
+    def actualizar_puntero_general(self):        
+        self.btn_puntero.place_forget()
+        
+        x_puntero = self.pos_x_user - 20
+        y_puntero = self.pos_y_user - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+    
+        self.init_puntero_general(self.pos_x_user, self.pos_y_user)
+    
+    
+    
+    def button_sitios_accion(self):
+        self.top_window = tk.Toplevel()
+        self.top_window.title('Sitios de interes')
+        self.top_window.wm_state('zoomed')
+        self.top_window.protocol("WM_DELETE_WINDOW", self.cerrar_window_sitios)
+        
+        self.get_dimensiones_actuales()  
+                
+        self.local_canvas = tk.Canvas(self.top_window, width=self.ancho_ventana, height=self.alto_ventana)
+        self.local_canvas.place(x=0, y=0)
+        
+        btn_cerrar = tk.Button(self.local_canvas, text="Cerrar", bd='20', background='red',
+                               command=self.cerrar_window_sitios)
+        btn_cerrar.place(x=90+575, y=90+550, width=150, height=75)
+        
+        self.init_puntero_sitios(self.ancho_ventana, self.alto_ventana)
+    
+    
+    def init_puntero_sitios(self, x_puntero=None, y_puntero=None):
+        if x_puntero is None:
+            x_puntero = self.x_puntero
+        
+        if y_puntero is None:
+            y_puntero = self.y_puntero
+            
+        x_puntero = x_puntero - 20
+        y_puntero = y_puntero - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+        
+        # Puntero
+        self.btn_puntero_sitios = tk.Button(self.local_canvas, background ='black')    
+        self.btn_puntero_sitios.place(x=x_puntero, y=y_puntero, width=20, height=20)
+                
+    
+    def actualizar_puntero_sitios(self):
+        x_puntero = self.pos_x_user - 20
+        y_puntero = self.pos_y_user - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+            
+        self.btn_puntero_sitios.place_forget()
+    
+        self.init_puntero_sitios(self.pos_x_user, self.pos_y_user)
+    
+    
+    def usuario_click(self, tiempo_cerrados):
+        """
+        Main Window:
+            Boton de ir a sitios: 90,90 a 370,220
+            Boton cerrar: 665,590 a 795,645
+        Top Level:
+            Boton cerrar: 665,640 a 795,695
+        """
+        if tiempo_cerrados >= 1 and tiempo_cerrados <= 2: # Estar un segundo con las manos cerradas
+            if self.top_window is None:
+                if (self.pos_x_user >= 90 and self.pos_x_user <= 370 and
+                    self.pos_y_user >= 90 and self.pos_y_user <= 220):
+                    self.button_sitios_accion()
+                
+                elif (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
+                      self.pos_y_user >= 590 and self.pos_y_user <= 645):
+                    self.cerrar_window_general()
+            else:
+                if (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
+                    self.pos_y_user >= 640 and self.pos_y_user <= 695):
+                    self.cerrar_window_sitios()
 
-    init_puntero_general(x_puntero, y_puntero)
 
-
-def usuario_click(tiempo_cerrados):
-    return
-
-
-
+    def actualizar_punteros(self):
+        if self.top_window is None:
+            self.actualizar_puntero_general()
+        else:
+            self.actualizar_puntero_sitios()
+            
+            
+    def cerrar_window_general(self):
+        self.main_window.destroy()
+    
+    
+    def cerrar_window_sitios(self):
+        self.top_window.destroy()
+        self.top_window = None
+        
+        
 
 def main():
     ##############################################################################################################
@@ -340,18 +414,10 @@ def main():
     ##############################################################################################################
     # Controlador de LEAP y Listener
     controller = Leap.Controller()
-    listener = SampleListener()
+    listener = SampleListenerConInterfaz()
     
     # Aniadir el listener
     controller.add_listener(listener)
-    
-    
-    
-    ##############################################################################################################
-    ##############################################################################################################
-    ##############################################################################################################
-    # Crear la interfaz grafica
-    init_interfaz()
     
     
     
