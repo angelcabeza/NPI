@@ -65,12 +65,12 @@ class MainActivity : AppCompatActivity() {
         Log.d("DEBUG", "EJE Y: $yPos")
         if (event.source and InputDevice.SOURCE_CLASS_POINTER != 0) {
             Log.d("DEBUG", "EJE Y: $yPos")
-            if (xPos > lastx + 300) {
+            if (xPos > lastx + 400) {
                 lastx = xPos
                 val intent = Intent(this, clasesActivity::class.java)
                 startActivity(intent)
                 return true
-            } else if (xPos < lastx - 300) {
+            } else if (xPos < lastx - 400) {
                 lastx = xPos
                 val intent = Intent(this, MapsActivity::class.java)
                 startActivity(intent)
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         Log.d("DEBUGasdasdasd", "MOTION EVENT. ${event.action}")
         Log.d("DEBUGasdasdasd", "EJE Y: $yPos")
         if (event.source and InputDevice.SOURCE_CLASS_POINTER != 0) {
-            if (yPos < lasty - 300) {
+            if (yPos < lasty - 400) {
                 lasty = yPos
                 val intent = Intent(this, TimeTableActivity::class.java)
                 startActivity(intent)
