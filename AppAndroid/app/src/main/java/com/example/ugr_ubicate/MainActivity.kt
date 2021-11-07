@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     var yPosIni = -1
     var xPosFin = -1
     var yPosFin = -1
+    var contDedos = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,11 +51,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val index = MotionEventCompat.getActionIndex(event)
+        val action = MotionEventCompat.getActionMasked(event)
 
         // Cojo las coordenadas de cuando empieza la acción
-        if (event.action == MotionEvent.ACTION_DOWN) {
+        if (action == 5 || action == 0) {
             xPosIni = MotionEventCompat.getX(event, index).toInt()
             yPosIni = MotionEventCompat.getY(event, index).toInt()
+            contDedos++
         }
         // Cojo las coordenadas de cada movimiento de los dedos
         if (event.action == MotionEvent.ACTION_MOVE) {
@@ -63,22 +66,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Cuando la acción termina o se cancela compruebo lo que ha querido hacer el usuario
-        if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-            var xPos = xPosFin - xPosIni
-            var yPos = yPosFin - yPosIni
+        if ( (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)) {
+            if (contDedos == 2) {
+                contDedos = 0
+                var xPos = xPosFin - xPosIni
+                var yPos = yPosFin - yPosIni
 
-            if (Math.abs(xPos) > Math.abs(yPos) && !enPausa) {
-                if (xPos > 0 && !yaLLamado) {
-                    val intent = Intent(this, clasesActivity::class.java)
+                if (Math.abs(xPos) > Math.abs(yPos) && !enPausa) {
+                    if (xPos > 0 && !yaLLamado) {
+                        val intent = Intent(this, clasesActivity::class.java)
+                        startActivity(intent)
+                        yaLLamado = true
+                    } else {
+                        val intent = Intent(this, MapsActivity::class.java)
+                        startActivity(intent)
+                        yaLLamado = true
+                    }
+                } else if (!enPausa && !yaLLamado) {
+                    val intent = Intent(this, TimeTableActivity::class.java)
                     startActivity(intent)
-                    yaLLamado = true
-                } else {
-                    val intent = Intent(this, MapsActivity::class.java)
-                    startActivity(intent)
-                    yaLLamado = true
                 }
-            } else if (!enPausa && !yaLLamado) {
-                val intent = Intent(this, TimeTableActivity::class.java)
+            } else{
+                contDedos = 0
             }
         }
         
@@ -88,10 +97,12 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         enPausa = true
+        contDedos = 0
     }
     override fun onResume() {
         super.onResume()
         enPausa = false
         yaLLamado = false
+        contDedos = 0
     }
 }
