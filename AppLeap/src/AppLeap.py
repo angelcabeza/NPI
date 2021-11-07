@@ -89,10 +89,11 @@ class SampleListenerConInterfaz(Leap.Listener):
             leapPoint = pointable.stabilized_tip_position
             normalizedPoint = iBox.normalize_point(leapPoint, False)
             
+            self.get_dimensiones_actuales()
+            
             self.pos_x_user = normalizedPoint.x * self.ancho_ventana
             self.pos_y_user = (1 - normalizedPoint.y) * self.alto_ventana
             
-            self.actualizar_punteros()
             self.actualizar_punteros()
     
         # Get hands
@@ -241,14 +242,13 @@ class SampleListenerConInterfaz(Leap.Listener):
     
         self.get_dimensiones_actuales()
             
-        self.canvas = tk.Canvas(self.main_window, width=self.ancho_ventana, height=self.alto_ventana-100)
+        self.canvas = tk.Canvas(self.main_window, width=self.ancho_ventana, height=self.alto_ventana)
         self.canvas.place(x=0, y=50)
         
         self.crear_botones()
-
         
         # de 0,0 a 1500,700
-        self.init_puntero_general(self.ancho_ventana-20, self.alto_ventana-134)
+        self.init_puntero_general(self.ancho_ventana, self.alto_ventana)
             
         # Ventana principal
         self.main_window.mainloop()
@@ -257,7 +257,7 @@ class SampleListenerConInterfaz(Leap.Listener):
     def get_dimensiones_actuales(self):
         self.main_window.update()
         self.ancho_ventana = self.main_window.winfo_screenwidth()
-        self.alto_ventana = self.main_window.winfo_screenheight()
+        self.alto_ventana = self.main_window.winfo_screenheight()-115
         
         if self.top_window is not None:
             self.ancho_ventana = self.top_window.winfo_screenwidth()
@@ -292,6 +292,13 @@ class SampleListenerConInterfaz(Leap.Listener):
                 
     
     def init_puntero_general(self, x_puntero, y_puntero):
+        x_puntero = x_puntero - 20
+        y_puntero = y_puntero - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+            
         # Puntero
         self.btn_puntero = tk.Button(self.canvas, background ='black')    
         self.btn_puntero.place(x=x_puntero, y=y_puntero, width=20, height=20)
@@ -299,6 +306,13 @@ class SampleListenerConInterfaz(Leap.Listener):
     
     def actualizar_puntero_general(self):        
         self.btn_puntero.place_forget()
+        
+        x_puntero = self.pos_x_user - 20
+        y_puntero = self.pos_y_user - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
     
         self.init_puntero_general(self.pos_x_user, self.pos_y_user)
     
@@ -315,11 +329,11 @@ class SampleListenerConInterfaz(Leap.Listener):
         self.local_canvas = tk.Canvas(self.top_window, width=self.ancho_ventana, height=self.alto_ventana)
         self.local_canvas.place(x=0, y=0)
         
-        self.init_puntero_sitios(self.ancho_ventana-20, self.alto_ventana-20)
-        
         btn_cerrar = tk.Button(self.local_canvas, text="Cerrar", bd='20', background='red',
                                command=self.cerrar_window_sitios)
-        btn_cerrar.place(x=0, y=0, width=150, height=75)
+        btn_cerrar.place(x=90+575, y=90+550, width=150, height=75)
+        
+        self.init_puntero_sitios(self.ancho_ventana, self.alto_ventana)
     
     
     def init_puntero_sitios(self, x_puntero=None, y_puntero=None):
@@ -328,28 +342,60 @@ class SampleListenerConInterfaz(Leap.Listener):
         
         if y_puntero is None:
             y_puntero = self.y_puntero
+            
+        x_puntero = x_puntero - 20
+        y_puntero = y_puntero - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
         
         # Puntero
         self.btn_puntero_sitios = tk.Button(self.local_canvas, background ='black')    
         self.btn_puntero_sitios.place(x=x_puntero, y=y_puntero, width=20, height=20)
                 
     
-    def actualizar_puntero_sitios(self):        
+    def actualizar_puntero_sitios(self):
+        x_puntero = self.pos_x_user - 20
+        y_puntero = self.pos_y_user - 20
+        if x_puntero < 0:
+            x_puntero = 0
+        if y_puntero < 0:
+            y_puntero = 0
+            
         self.btn_puntero_sitios.place_forget()
     
         self.init_puntero_sitios(self.pos_x_user, self.pos_y_user)
     
     
     def usuario_click(self, tiempo_cerrados):
-        if self.top_window is None:
-            self.pos_x_user, self.pos_y_user
+        """
+        Main Window:
+            Boton de ir a sitios: 90,90 a 370,220
+            Boton cerrar: 665,590 a 795,645
+        Top Level:
+            Boton cerrar: 665,640 a 795,695
+        """
+        if tiempo_cerrados >= 1 and tiempo_cerrados <= 2: # Estar un segundo con las manos cerradas
+            if self.top_window is None:
+                if (self.pos_x_user >= 90 and self.pos_x_user <= 370 and
+                    self.pos_y_user >= 90 and self.pos_y_user <= 220):
+                    self.button_sitios_accion()
+                
+                elif (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
+                      self.pos_y_user >= 590 and self.pos_y_user <= 645):
+                    self.cerrar_window_general()
+            else:
+                if (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
+                    self.pos_y_user >= 640 and self.pos_y_user <= 695):
+                    self.cerrar_window_sitios()
 
 
     def actualizar_punteros(self):
         if self.top_window is None:
             self.actualizar_puntero_general()
         else:
-            self.actualizar_puntero_general()
+            self.actualizar_puntero_sitios()
             
             
     def cerrar_window_general(self):
