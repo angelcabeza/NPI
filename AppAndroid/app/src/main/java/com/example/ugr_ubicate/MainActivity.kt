@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         val index = MotionEventCompat.getActionIndex(event)
 
         // Cojo las coordenadas de cuando empieza la acción
-        if (event.action == MotionEvent.ACTION_DOWN){
+        if (event.action == MotionEvent.ACTION_DOWN) {
             xPosIni = MotionEventCompat.getX(event, index).toInt()
             yPosIni = MotionEventCompat.getY(event, index).toInt()
         }
@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             yPosFin = MotionEventCompat.getY(event, index).toInt()
         }
 
+        <<<<<<< HEAD
         // Cuando la acción termina o se cancela compruebo lo que ha querido hacer el usuario
         if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
             var xPos = xPosFin - xPosIni
@@ -79,19 +80,15 @@ class MainActivity : AppCompatActivity() {
                 }
             } else if (!enPausa && !yaLLamado) {
                 val intent = Intent(this, TimeTableActivity::class.java)
-                startActivity(intent)
-                yaLLamado = true
             }
         }
-
-        return true
     }
 
+<<<<<<< HEAD
     override fun onPause() {
         super.onPause()
         enPausa = true
     }
-
     override fun onResume() {
         super.onResume()
         enPausa = false
