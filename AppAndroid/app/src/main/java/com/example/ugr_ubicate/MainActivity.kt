@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity() {
             yPosFin = MotionEventCompat.getY(event, index).toInt()
         }
 
-        <<<<<<< HEAD
         // Cuando la acción termina o se cancela compruebo lo que ha querido hacer el usuario
         if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
             var xPos = xPosFin - xPosIni
@@ -82,9 +81,10 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, TimeTableActivity::class.java)
             }
         }
+        
+        return true
     }
 
-<<<<<<< HEAD
     override fun onPause() {
         super.onPause()
         enPausa = true
