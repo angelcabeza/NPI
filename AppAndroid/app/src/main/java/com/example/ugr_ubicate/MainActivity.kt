@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
                 return true
             } else if (xPos < lastx - 400) {
+
                 lastx = xPos
                 val intent = Intent(this, MapsActivity::class.java)
                 startActivity(intent)
@@ -91,6 +92,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             } else if (yPos > lasty + 100) {
                 lasty = 99999 // Reset y
+
             }
         }
         return true
