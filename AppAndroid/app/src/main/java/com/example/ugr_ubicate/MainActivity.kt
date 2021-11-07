@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, TimeTableActivity::class.java)
                 startActivity(intent)
                 return true
+            } else if (yPos > lasty + 100) {
+                lasty = 99999 // Reset y
             }
         }
         return true
