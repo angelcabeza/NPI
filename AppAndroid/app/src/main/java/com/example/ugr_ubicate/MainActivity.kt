@@ -17,6 +17,14 @@ import java.util.jar.Manifest
 class MainActivity : AppCompatActivity() {
     var lastx = 0
     var lasty = 9999
+    var llamado_y = false
+    var llamado_x = false
+    var enPausa = false
+    var yaLLamado = false
+    var xPosIni = -1
+    var yPosIni = -1
+    var xPosFin = -1
+    var yPosFin = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,56 +50,51 @@ class MainActivity : AppCompatActivity() {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val index = MotionEventCompat.getActionIndex(event)
-        var xPos = -1
-        var yPos = -1
 
-        xPos = MotionEventCompat.getX(event, index).toInt()
-        yPos = MotionEventCompat.getY(event, index).toInt()
-
-
-        if (event.action == 3 && event.pointerCount == 3) {
-            checkVerticalSlice(event, xPos, yPos)
+        // Cojo las coordenadas de cuando empieza la acción
+        if (event.action == MotionEvent.ACTION_DOWN){
+            xPosIni = MotionEventCompat.getX(event, index).toInt()
+            yPosIni = MotionEventCompat.getY(event, index).toInt()
+        }
+        // Cojo las coordenadas de cada movimiento de los dedos
+        if (event.action == MotionEvent.ACTION_MOVE) {
+            xPosFin = MotionEventCompat.getX(event, index).toInt()
+            yPosFin = MotionEventCompat.getY(event, index).toInt()
         }
 
+        // Cuando la acción termina o se cancela compruebo lo que ha querido hacer el usuario
+        if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+            var xPos = xPosFin - xPosIni
+            var yPos = yPosFin - yPosIni
 
-        if (event.action == MotionEvent.ACTION_MOVE && event.pointerCount == 3) {
-            checkSlice(event, xPos, yPos)
-        }
-        return true
-    }
-
-    fun checkSlice(event: MotionEvent, xPos: Int, yPos: Int): Boolean{
-        Log.d("DEBUG", "MOTION EVENT. ${event.action}")
-        Log.d("DEBUG", "EJE Y: $yPos")
-        if (event.source and InputDevice.SOURCE_CLASS_POINTER != 0) {
-            Log.d("DEBUG", "EJE Y: $yPos")
-            if (xPos > lastx + 300) {
-                lastx = xPos
-                val intent = Intent(this, clasesActivity::class.java)
-                startActivity(intent)
-                return true
-            } else if (xPos < lastx - 300) {
-                lastx = xPos
-                val intent = Intent(this, MapsActivity::class.java)
-                startActivity(intent)
-                return true
-            }
-        }
-        return true
-    }
-
-    fun checkVerticalSlice(event: MotionEvent, xPos: Int, yPos: Int): Boolean{
-        Log.d("DEBUGasdasdasd", "MOTION EVENT. ${event.action}")
-        Log.d("DEBUGasdasdasd", "EJE Y: $yPos")
-        if (event.source and InputDevice.SOURCE_CLASS_POINTER != 0) {
-            if (yPos < lasty - 300) {
-                lasty = yPos
+            if (Math.abs(xPos) > Math.abs(yPos) && !enPausa) {
+                if (xPos > 0 && !yaLLamado) {
+                    val intent = Intent(this, clasesActivity::class.java)
+                    startActivity(intent)
+                    yaLLamado = true
+                } else {
+                    val intent = Intent(this, MapsActivity::class.java)
+                    startActivity(intent)
+                    yaLLamado = true
+                }
+            } else if (!enPausa && !yaLLamado) {
                 val intent = Intent(this, TimeTableActivity::class.java)
                 startActivity(intent)
-                return true
+                yaLLamado = true
             }
         }
+
         return true
     }
 
+    override fun onPause() {
+        super.onPause()
+        enPausa = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enPausa = false
+        yaLLamado = false
+    }
 }
