@@ -248,7 +248,7 @@ class SampleListenerConInterfaz(Leap.Listener):
         self.crear_botones()
         
         # de 0,0 a 1500,700
-        self.init_puntero_general(self.ancho_ventana, self.alto_ventana)
+        self.init_puntero_general(373,292)
             
         # Ventana principal
         self.main_window.mainloop()
@@ -333,7 +333,7 @@ class SampleListenerConInterfaz(Leap.Listener):
                                command=self.cerrar_window_sitios)
         btn_cerrar.place(x=90+575, y=90+550, width=150, height=75)
         
-        self.init_puntero_sitios(self.ancho_ventana, self.alto_ventana)
+        self.init_puntero_sitios(456, 372)
     
     
     def init_puntero_sitios(self, x_puntero=None, y_puntero=None):
