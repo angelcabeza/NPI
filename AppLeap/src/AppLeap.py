@@ -281,9 +281,6 @@ class PaintBox(Frame):
     
     def quitarListener(self):
         self.leap.remove_listener(self.painter)
-        
-    def finalizar_ejecucion(self):
-        self.destroy()
 
 
 def main():
