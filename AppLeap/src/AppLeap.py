@@ -8,28 +8,27 @@ Created on Mon Nov  8 19:02:36 2021
 import Tkinter as tk
 from Tkinter import Frame, Canvas, YES, BOTH
 import sys
+import time
+
 sys.path.insert(0, "../lib")
 import Leap
 
 class TouchPointListener(Leap.Listener):
-    def __init__(self, ancho, alto):
+    def __init__(self, ventana_main, ancho, alto):
         super(TouchPointListener, self).__init__()  #Initialize like a normal listener
+        
+        self.paintBox = ventana_main
+        self.localCanvas = None
+        
         self.ancho_canvas = ancho
         self.alto_canvas  = alto
         
-#        self.dedos_extendidos = False
-#        self.dedos_cerrados_tras_extendidos = False
-#        self.tiempo_ultimo_extendidos = 0
-#        self.canvas = None
-#        self.local_canvas = None
-#        self.btn_puntero_sitios = None
-#        self.btn_puntero = None
-#        self.main_window = None
-#        self.top_window = None
+        self.dedos_extendidos = False
+        self.dedos_cerrados_tras_extendidos = False
+        self.tiempo_ultimo_extendidos = 0
+
         self.pos_x_user = 0
         self.pos_y_user = 0
-#        self.ancho_ventana = 0
-#        self.alto_ventana = 0
         
         self.anchura_boton = 250
         self.altura_boton  = 150
@@ -42,6 +41,13 @@ class TouchPointListener(Leap.Listener):
         self.col2 = self.col1 + self.anchura_boton + 50
         self.col3 = self.col2 + self.anchura_boton + 50
         
+        self.anchura_texto = 50
+        self.fila_offset = self.anchura_boton/2
+        self.col_offset  = self.altura_boton/2
+        
+        self.puntero = None
+        self.punteroTop = None
+        
         
     def on_init(self, controller):
         print "Initialized"
@@ -50,7 +56,16 @@ class TouchPointListener(Leap.Listener):
         print "Connected"
 
     def on_frame(self, controller):
-        self.paintCanvas.delete("puntero")
+        if not self.paintCanvas is None:
+            if self.puntero in self.paintCanvas.find_all():
+                self.paintCanvas.delete("puntero")
+                self.puntero = None
+        
+        if not self.localCanvas is None:
+            if self.punteroTop in self.localCanvas.find_all():
+                self.localCanvas.delete("punteroTop")
+                self.punteroTop = None
+        
         frame = controller.frame()
 
         interactionBox = frame.interaction_box
@@ -68,95 +83,101 @@ class TouchPointListener(Leap.Listener):
         fingerList = frame.fingers
         if len(fingerList) > 0:
             extendedFingers = len(fingerList.extended())
-            
-            if extendedFingers == 0:
-                self.usuario_click(2)
         
-#        if extendedFingers == 5 and not self.dedos_cerrados_tras_extendidos:
-#            self.tiempo_ultimo_extendidos = time.time()
-#            self.dedos_extendidos = True
-#            
-#        elif extendedFingers == 0 and self.dedos_extendidos:
-#            self.dedos_extendidos = False
-#            self.dedos_cerrados_tras_extendidos = True
-#            
-#        elif extendedFingers == 5 and self.dedos_cerrados_tras_extendidos:
-#            self.dedos_extendidos = True
-#            self.dedos_cerrados_tras_extendidos = False
-#            
-#            tiempo_volver_abrir = time.time()
-#            tiempo_cerrados = self.tiempo_ultimo_extendidos - tiempo_volver_abrir
-#            #self.usuario_click(tiempo_cerrados)
-#            print "pillado"
-#            
-#        else:
-#            self.dedos_extendidos = False
-#            self.dedos_cerrados_tras_extendidos = False
+            if extendedFingers == 5 and not self.dedos_cerrados_tras_extendidos:
+                self.tiempo_ultimo_extendidos = time.time()
+                self.dedos_extendidos = True
+                
+            elif extendedFingers == 0 and self.dedos_extendidos:
+                self.dedos_extendidos = False
+                self.dedos_cerrados_tras_extendidos = True
+                
+            elif extendedFingers == 5 and self.dedos_cerrados_tras_extendidos:
+                self.dedos_extendidos = True
+                self.dedos_cerrados_tras_extendidos = False
+                
+                tiempo_volver_abrir = time.time()
+                tiempo_cerrados = tiempo_volver_abrir - self.tiempo_ultimo_extendidos
+                
+                if 1 < tiempo_cerrados and tiempo_cerrados < 3:
+                    self.usuario_click()
+                
 
 
     def draw(self, x, y, width, height, color):
-        self.paintCanvas.create_oval( x, y, x + width, y + height, fill = color, outline = "", tags="puntero")
+        if not self.paintCanvas is None:
+            self.puntero = self.paintCanvas.create_oval( x, y, x + width, y + height, fill = color, outline = "", tags="puntero")
+        
+        if not self.localCanvas is None:
+            self.punteroTop = self.localCanvas.create_oval( x, y, x + width, y + height, fill = color, outline = "", tags="punteroTop")
+            
 
-    def set_canvas(self, canvas):
-        self.paintCanvas = canvas
+    def set_canvas(self, canvasMain, canvasSitios):
+        self.paintCanvas = canvasMain
+        self.localCanvas = canvasSitios
         
     
-    def crear_botones(self):
-        anchura_texto = 50
-        fila_offset = self.anchura_boton/2
-        col_offset  = self.altura_boton/2
-           
-        #############
+    def crear_botones_paintCanvas(self):
+        # Main Window
         rect_sitios = self.paintCanvas.create_rectangle(self.col1, self.fila1, self.col1+self.anchura_boton,
                                                         self.fila1+self.altura_boton, fill="#D3D3D3")
                                                         
-        btn_sitios = self.paintCanvas.create_text(self.col1+fila_offset, self.fila1+col_offset,
-                                                  text="Sitios de interes", width=anchura_texto)
+        btn_sitios = self.paintCanvas.create_text(self.col1+self.fila_offset, self.fila1+self.col_offset,
+                                                  text="Sitios de interes", width=self.anchura_texto)
         
         #############
         rect2 = self.paintCanvas.create_rectangle(self.col2, self.fila1, self.col2+self.anchura_boton,
                                                   self.fila1+self.altura_boton, fill="#D3D3D3")
                                                   
-        btn_2 = self.paintCanvas.create_text(self.col2+fila_offset, self.fila1+col_offset,
-                                             text="Ir a clase", width=anchura_texto)
+        btn_2 = self.paintCanvas.create_text(self.col2+self.fila_offset, self.fila1+self.col_offset,
+                                             text="Ir a clase", width=self.anchura_texto)
         
         #############
         rect3 = self.paintCanvas.create_rectangle(self.col3, self.fila1, self.col3+self.anchura_boton,
                                                   self.fila1+self.altura_boton, fill="#D3D3D3")
                                                   
-        btn_3 = self.paintCanvas.create_text(self.col3+fila_offset, self.fila1+col_offset,
-                                             text="Horarios", width=anchura_texto)
+        btn_3 = self.paintCanvas.create_text(self.col3+self.fila_offset, self.fila1+self.col_offset,
+                                             text="Horarios", width=self.anchura_texto)
         
         #############
         rect4 = self.paintCanvas.create_rectangle(self.col1, self.fila2, self.col1+self.anchura_boton,
                                                   self.fila2+self.altura_boton, fill="#D3D3D3")
                                                   
-        btn_4 = self.paintCanvas.create_text(self.col1+fila_offset, self.fila2+col_offset,
-                                             text="Relleno 1", width=anchura_texto)
+        btn_4 = self.paintCanvas.create_text(self.col1+self.fila_offset, self.fila2+self.col_offset,
+                                             text="Relleno 1", width=self.anchura_texto)
         
         #############
         rect5 = self.paintCanvas.create_rectangle(self.col2, self.fila2, self.col2+self.anchura_boton,
                                                   self.fila2+self.altura_boton, fill="#D3D3D3")
                                                   
-        btn_5 = self.paintCanvas.create_text(self.col2+fila_offset, self.fila2+col_offset,
-                                             text="Relleno 2", width=anchura_texto)
+        btn_5 = self.paintCanvas.create_text(self.col2+self.fila_offset, self.fila2+self.col_offset,
+                                             text="Relleno 2", width=self.anchura_texto)
         
         #############
         rect6 = self.paintCanvas.create_rectangle(self.col3, self.fila2, self.col3+self.anchura_boton,
                                                   self.fila2+self.altura_boton, fill="#D3D3D3")
                                                   
-        btn_6 = self.paintCanvas.create_text(self.col3+fila_offset, self.fila2+col_offset,
-                                             text="Relleno 3", width=anchura_texto)
+        btn_6 = self.paintCanvas.create_text(self.col3+self.fila_offset, self.fila2+self.col_offset,
+                                             text="Relleno 3", width=self.anchura_texto)
         
         #############
-        rect_cerrar = self.paintCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
-                                                        self.fila3+self.altura_boton, fill="red")
+        rect_cerrarMain = self.paintCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
+                                                            self.fila3+self.altura_boton, fill="red")
         
-        btn_cerrar = self.paintCanvas.create_text(self.col2+fila_offset, self.fila3+col_offset,
-                                                  text="Cerrar", width=anchura_texto)
+        btn_cerrarMain = self.paintCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
+                                                      text="Cerrar", width=self.anchura_texto)
+        
+    
+    def crear_botones_localCanvas(self):
+        # Sitios window
+        rect_cerrarSitios = self.localCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
+                                                              self.fila3+self.altura_boton, fill="red")
+        
+        btn_cerrarSitios = self.localCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
+                                                        text="Cerrar", width=self.anchura_texto)
         
 
-    def usuario_click(self, tiempo_cerrados):
+    def usuario_click(self):
         """
         Main Window:
             Boton de ir a sitios:   self.col1,self.fila1 a
@@ -166,37 +187,68 @@ class TouchPointListener(Leap.Listener):
         Top Level:
             Boton cerrar: 665,640 a 795,695
         """
-#        if tiempo_cerrados >= 1 and tiempo_cerrados <= 2: # Estar un segundo con las manos cerradas
-#            if self.top_window is None:
-#                if (self.pos_x_user >= 90 and self.pos_x_user <= 370 and
-#                    self.pos_y_user >= 90 and self.pos_y_user <= 220):
-#                    self.button_sitios_accion()
-#                
-#                elif (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
-#                      self.pos_y_user >= 590 and self.pos_y_user <= 645):
-#                    self.cerrar_window_general()
-#            else:
-#                if (self.pos_x_user >= 665 and self.pos_x_user <= 795 and
-#                    self.pos_y_user >= 640 and self.pos_y_user <= 695):
-#                    self.cerrar_window_sitios()
         
-        # Boton cerrar de la general
-        print self.pos_x_user
-        print self.pos_y_user
-        if (self.pos_x_user >= self.col2 and self.pos_x_user <= self.col2+self.anchura_boton and
-            self.pos_y_user >= self.fila3 and self.pos_y_user <= self.fila3+self.altura_boton):
-            self.cerrar_window_general()
-            print "conseguido"
+        if self.localCanvas is None:
+            # Boton sitios
+            if (self.col1 <= self.pos_x_user and self.pos_x_user <= self.col1+self.anchura_boton and
+                self.fila1 <= self.pos_y_user and self.pos_y_user <= self.fila1+self.altura_boton):
+                self.button_sitios_accion()
+        
+            # Boton cerrar de la general
+            if (self.col2 <= self.pos_x_user and self.pos_x_user <= self.col2+self.anchura_boton and
+                self.fila3 <= self.pos_y_user and self.pos_y_user <= self.fila3+self.altura_boton):
+                self.cerrar_window_general()
+        else:
+            # Boton cerrar de la general
+            if (self.col2 <= self.pos_x_user and self.pos_x_user <= self.col2+self.anchura_boton and
+                self.fila3 <= self.pos_y_user and self.pos_y_user <= self.fila3+self.altura_boton):
+                self.cerrar_window_sitios()
+        
+        
+    def button_sitios_accion(self):
+        if not self.paintCanvas is None:
+            self.paintCanvas.destroy()
+            self.paintCanvas = None
 
+        self.createLocalCanvas()
+        
 
     def cerrar_window_general(self):
-        self.main_window.destroy()
-    
+        self.paintBox.quitarListener()
+        
+        canvasVacio = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+        canvasVacio.pack()
+        
+        if not self.paintCanvas is None:
+            self.paintCanvas.destroy()
+            self.paintCanvas = None
+        
+        if not self.localCanvas is None:
+            self.localCanvas.destroy()
+            self.localCanvas = None
+            
     
     def cerrar_window_sitios(self):
-        self.top_window.destroy()
-        self.top_window = None
-
+        self.createPaintCanvas()
+        
+        if not self.localCanvas is None:
+            self.localCanvas.destroy()
+            self.localCanvas = None
+        
+        
+    def createPaintCanvas(self):
+        # create main Canvas component
+        self.paintCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+        self.paintCanvas.pack()
+        self.crear_botones_paintCanvas()
+    
+    
+    def createLocalCanvas(self):
+        # create local Canvas component for sitios
+        self.localCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+        self.localCanvas.pack()
+        self.crear_botones_localCanvas()
+        
 
 class PaintBox(Frame):
 
@@ -207,19 +259,31 @@ class PaintBox(Frame):
         self.alto_canvas  = 650
         
         self.leap = Leap.Controller()
-        self.painter = TouchPointListener(self.ancho_canvas, self.alto_canvas)
+        self.painter = TouchPointListener(self, self.ancho_canvas, self.alto_canvas)
         self.leap.add_listener(self.painter)
         self.pack( expand = YES, fill = BOTH )
         self.master.title( "App LEAP" )
 #        self.master.geometry( "950x650" )
         self.master.wm_state('zoomed')
+        
+        self.painter.createPaintCanvas()
       
-        # create Canvas component
-        self.paintCanvas = Canvas( self, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
-        self.paintCanvas.pack()
-        self.painter.set_canvas(self.paintCanvas)
-        self.painter.crear_botones()
-
+#        # create main Canvas component
+#        self.paintCanvas = Canvas( self, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+#        self.paintCanvas.pack()
+        
+#        # create local Canvas component for sitios
+#        self.paintCanvasSitios = Canvas( self, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+#        
+#        self.painter.set_canvas(self.paintCanvas, self.paintCanvasSitios)
+        
+#        self.painter.crear_botones()
+    
+    def quitarListener(self):
+        self.leap.remove_listener(self.painter)
+        
+    def finalizar_ejecucion(self):
+        self.destroy()
 
 
 def main():
