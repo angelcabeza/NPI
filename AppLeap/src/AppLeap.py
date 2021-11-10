@@ -6,7 +6,9 @@ Created on Mon Nov  8 19:02:36 2021
 """
 
 import Tkinter as tk
+from tkinter import * 
 from Tkinter import Frame, Canvas, YES, BOTH
+from PIL import ImageTk
 import sys
 import time
 
@@ -37,6 +39,8 @@ class TouchPointListener(Leap.Listener):
         self.fila1 = 50
         self.fila2 = self.fila1 + self.altura_boton + 50
         self.fila3 = self.fila2 + self.altura_boton + 50
+        self.fila4 = self.fila3 + self.altura_boton + 50
+        
         
         self.col1 = 50
         self.col2 = self.col1 + self.anchura_boton + 50
@@ -48,6 +52,16 @@ class TouchPointListener(Leap.Listener):
         
         self.puntero = None
         self.punteroTop = None
+        
+        # Lista de imagenes y descripciones de sitios
+        self.photos = [ImageTk.PhotoImage(file='../imagenes/imagen1.png'), 
+                  ImageTk.PhotoImage(file='../imagenes/imagen2.jpg'),  
+                  ImageTk.PhotoImage(file='../imagenes/imagen3.jpeg')]
+        
+        self.description = ["Descripcion sitio 1", "Descripcion sitio 2", "Descripcion sitio 3"]
+        # Puntero que indica en que sitio estamos
+        self.puntero_sitios = 0
+        self.inSitios = False
         
         
     def on_init(self, controller):
@@ -122,11 +136,13 @@ class TouchPointListener(Leap.Listener):
                         cont+=1
                     elif(i.direction[0] > 0.2):
                         cont-=1
-                if (cont >= 4):
-                    # El aceptar aquí
+                if (cont >= 4 and self.inSitios):
+                    
+                    self.puntero_sitios = (self.puntero_sitios + 1 ) % len(self.photos)
                     self.tiempo_posicion_neutra -= 400
-                elif(cont <= -4):
-                    # El rechazar aquí
+                    
+                elif(cont <= -4 and self.inSitio):
+                    self.puntero_sitios = (self.puntero_sitios - 1 ) % len(self.photos)                    
                     self.tiempo_posicion_neutra -= 400
 
                             
@@ -201,13 +217,22 @@ class TouchPointListener(Leap.Listener):
     
     def crear_botones_localCanvas(self):
         # Sitios window
-        rect_cerrarSitios = self.localCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
+        rect_imagen_sitio = self.localCanvas.create_image(650, 400, image=self.photos[self.puntero_sitios], anchor = 's')
+        
+        rec_desc_rect_sitio =  self.localCanvas.create_rectangle(350, 400, 700,
+                                                              450, fill="blue")
+        
+        text_descripcion_sitios = self.localCanvas.create_text(400, 425,
+                                                        text=self.description[self.puntero_sitios], width=150)
+        
+        
+        rect_cerrarSitios = self.localCanvas.create_rectangle(self.col2, self.fila3 , self.col2+self.anchura_boton,
                                                               self.fila3+self.altura_boton, fill="red")
         
         btn_cerrarSitios = self.localCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
                                                         text="Cerrar", width=self.anchura_texto)
         
-
+        
     def usuario_click(self):
         """
         Main Window:
@@ -223,6 +248,7 @@ class TouchPointListener(Leap.Listener):
             # Boton sitios
             if (self.col1 <= self.pos_x_user and self.pos_x_user <= self.col1+self.anchura_boton and
                 self.fila1 <= self.pos_y_user and self.pos_y_user <= self.fila1+self.altura_boton):
+                self.inSitios = True
                 self.button_sitios_accion()
         
             # Boton cerrar de la general
@@ -233,6 +259,7 @@ class TouchPointListener(Leap.Listener):
             # Boton cerrar de la general
             if (self.col2 <= self.pos_x_user and self.pos_x_user <= self.col2+self.anchura_boton and
                 self.fila3 <= self.pos_y_user and self.pos_y_user <= self.fila3+self.altura_boton):
+                self.inSitios = False
                 self.cerrar_window_sitios()
         
         
@@ -272,7 +299,7 @@ class TouchPointListener(Leap.Listener):
         self.paintCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.paintCanvas.pack()
         self.crear_botones_paintCanvas()
-    
+        
     
     def createLocalCanvas(self):
         # create local Canvas component for sitios
