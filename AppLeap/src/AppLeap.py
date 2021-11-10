@@ -58,6 +58,10 @@ class TouchPointListener(Leap.Listener):
                   ImageTk.PhotoImage(file='../imagenes/imagen2.jpg'),  
                   ImageTk.PhotoImage(file='../imagenes/imagen3.jpeg')]
         
+        self.maps = [ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif'), 
+                  ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif'),  
+                  ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif')]
+        
         self.description = ["Descripcion sitio 1", "Descripcion sitio 2", "Descripcion sitio 3"]
         # Puntero que indica en que sitio estamos
         self.puntero_sitios = 0
@@ -139,6 +143,7 @@ class TouchPointListener(Leap.Listener):
                 if (cont >= 4 and self.inSitios):
                     
                     self.puntero_sitios = (self.puntero_sitios + 1 ) % len(self.photos)
+                    self.createLocalCanvas()
                     self.tiempo_posicion_neutra -= 400
                     
                 elif(cont <= -4 and self.inSitio):
@@ -261,13 +266,34 @@ class TouchPointListener(Leap.Listener):
                 self.fila3 <= self.pos_y_user and self.pos_y_user <= self.fila3+self.altura_boton):
                 self.inSitios = False
                 self.cerrar_window_sitios()
+            
+            # Boton ir a google maps
+            if (650 <= self.pos_x_user and self.pos_x_user <= 450):
+                self.inSitios = False
+                self.go_to_maps()
+                
+    def go_to_maps(self):
+        if not self.paintCanvas is None:
+            self.paintCanvas.destroy()
+            self.paintCanvas = None
+        if not self.localCanvas is None:
+            self.localCanvas.destroy()
+            self.localCanvas = None
+            
+        self.mapsCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
+        self.mapsCanvas.pack()
         
+        mapa = self.mapsCanvas.create_image(500, 650, image=self.maps[self.puntero_sitios], anchor = 's')
+
         
     def button_sitios_accion(self):
         if not self.paintCanvas is None:
             self.paintCanvas.destroy()
             self.paintCanvas = None
-
+        
+        if not self.localCanvas is None:
+            self.localCanvas.destroy()
+            self.localCanvas = None
         self.createLocalCanvas()
         
 
@@ -299,7 +325,7 @@ class TouchPointListener(Leap.Listener):
         self.paintCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.paintCanvas.pack()
         self.crear_botones_paintCanvas()
-        
+
     
     def createLocalCanvas(self):
         # create local Canvas component for sitios
