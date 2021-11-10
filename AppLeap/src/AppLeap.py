@@ -336,8 +336,8 @@ class TouchPointListener(Leap.Listener):
         # create main Canvas component
         self.paintCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.paintCanvas.pack()
-        # self.crear_botones_paintCanvas()
-        self.go_to_maps()
+        self.crear_botones_paintCanvas()
+
     
     def createLocalCanvas(self):
         # create local Canvas component for sitios
