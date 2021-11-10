@@ -147,7 +147,8 @@ class TouchPointListener(Leap.Listener):
                     self.tiempo_posicion_neutra -= 400
                     
                 elif(cont <= -4 and self.inSitio):
-                    self.puntero_sitios = (self.puntero_sitios - 1 ) % len(self.photos)                    
+                    self.puntero_sitios = (self.puntero_sitios - 1 ) % len(self.photos)      
+                    self.createLocalCanvas()
                     self.tiempo_posicion_neutra -= 400
 
                             
@@ -271,6 +272,10 @@ class TouchPointListener(Leap.Listener):
             if (650 <= self.pos_x_user and self.pos_x_user <= 450):
                 self.inSitios = False
                 self.go_to_maps()
+        if self.mapsCanvas is not None:
+            if (self.col2 <= self.pos_x_user and self.pos_x_user <= self.col2+self.anchura_boton and
+                self.fila3 <= self.pos_y_user and self.pos_y_user <= self.fila3+self.altura_boton):
+                self.button_sitios_accion()
                 
     def go_to_maps(self):
         if not self.paintCanvas is None:
@@ -283,8 +288,15 @@ class TouchPointListener(Leap.Listener):
         self.mapsCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.mapsCanvas.pack()
         
-        mapa = self.mapsCanvas.create_image(500, 650, image=self.maps[self.puntero_sitios], anchor = 's')
+        mapa = self.mapsCanvas.create_image(500, 450, image=self.maps[self.puntero_sitios], anchor = 's')
 
+        cerrar_mapa = self.mapsCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
+                                                            self.fila3+self.altura_boton, fill="red")
+        
+        
+        text_cerrar_mapa = self.mapsCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
+                                                      text="Cerrar", width=self.anchura_texto)
+        
         
     def button_sitios_accion(self):
         if not self.paintCanvas is None:
@@ -324,8 +336,8 @@ class TouchPointListener(Leap.Listener):
         # create main Canvas component
         self.paintCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.paintCanvas.pack()
-        self.crear_botones_paintCanvas()
-
+        # self.crear_botones_paintCanvas()
+        self.go_to_maps()
     
     def createLocalCanvas(self):
         # create local Canvas component for sitios
