@@ -26,6 +26,7 @@ class TouchPointListener(Leap.Listener):
         self.dedos_extendidos = False
         self.dedos_cerrados_tras_extendidos = False
         self.tiempo_ultimo_extendidos = 0
+        self.tiempo_posicion_neutra = 0
 
         self.pos_x_user = 0
         self.pos_y_user = 0
@@ -75,15 +76,20 @@ class TouchPointListener(Leap.Listener):
         position_hand = hand.stabilized_palm_position
         normalizedPosition = interactionBox.normalize_point(position_hand)
         
+        orientation_palm = hand.palm_normal
+
         self.pos_x_user = normalizedPosition.x * self.ancho_canvas
         self.pos_y_user = self.alto_canvas - normalizedPosition.y * self.alto_canvas
         
         self.draw(self.pos_x_user, self.pos_y_user, 40, 40, color='black')
         
+
+
         fingerList = frame.fingers
         if len(fingerList) > 0:
             extendedFingers = len(fingerList.extended())
-        
+            
+            
             if extendedFingers == 5 and not self.dedos_cerrados_tras_extendidos:
                 self.tiempo_ultimo_extendidos = time.time()
                 self.dedos_extendidos = True
@@ -101,6 +107,31 @@ class TouchPointListener(Leap.Listener):
                 
                 if 1 < tiempo_cerrados and tiempo_cerrados < 3:
                     self.usuario_click()
+
+            if (orientation_palm[0] < -0.9 and extendedFingers == 5):
+                cont = 0
+                for i in hand.fingers:
+                    if (i.direction[0]< 0.1 and i.direction[0] > -0.3):
+                        cont+=1
+                if (cont >= 3):
+                    self.tiempo_posicion_neutra = time.time()
+            elif (((time.time() - self.tiempo_posicion_neutra) < 400)):
+                cont = 0
+                for i in hand.fingers:
+                    if (i.direction[0] < -0.3):
+                        cont+=1
+                    elif(i.direction[0] > 0.2):
+                        cont-=1
+                if (cont >= 4):
+                    # El aceptar aquí
+                    self.tiempo_posicion_neutra -= 400
+                elif(cont <= -4):
+                    # El rechazar aquí
+                    self.tiempo_posicion_neutra -= 400
+
+                            
+                
+
                 
 
 
@@ -248,7 +279,8 @@ class TouchPointListener(Leap.Listener):
         self.localCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.localCanvas.pack()
         self.crear_botones_localCanvas()
-        
+    
+
 
 class PaintBox(Frame):
 
