@@ -1,6 +1,5 @@
 package com.example.ugr_ubicate
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,8 +12,8 @@ import android.view.View
 import android.widget.TextView
 import android.hardware.SensorEventListener
 import android.os.Build
-import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -38,6 +37,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var instruccionesEscalera34: Array<String> = arrayOf("Gire a la derecha", "Ande todo recto hasta llegar a la clase 3.6")
     private lateinit var  instrucciones: TextView
     private lateinit var textGesto: TextView
+    private lateinit var imagen: ImageView
     private var primeraInstruccionRuta36 = false
     private var segundaInstruccionRuta36 = false
     private var terceraInstruccionRuta36 = false
@@ -71,6 +71,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         instrucciones = findViewById(R.id.instruccionesContainer)
         textGesto = findViewById(R.id.textGesto)
+        imagen = findViewById(R.id.imagenClases)
 
 
         val titulo = findViewById<TextView>(R.id.titulo)
@@ -80,11 +81,14 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         if (!perdido) {
             instrucciones.visibility = View.INVISIBLE
             textGesto.visibility = View.INVISIBLE
+            imagen.visibility = View.INVISIBLE
         } else{
             titulo.visibility = View.INVISIBLE
             ruta1.visibility = View.INVISIBLE
+            imagen.visibility = View.INVISIBLE
             instrucciones.text = instruccionesEscalera34[cont]
             textGesto.visibility = View.VISIBLE
+            imagen.setImageResource(R.drawable.girarderecha)
         }
 
         if (!perdido) {
@@ -94,6 +98,8 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 instrucciones.text = instruccionesRuta1[cont]
                 instrucciones.visibility = View.VISIBLE
                 textGesto.visibility = View.VISIBLE
+                imagen.visibility = View.VISIBLE
+                currentSteps = 0
             }
         }
 
@@ -203,16 +209,19 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             instrucciones.text = instruccionesRuta1[cont]
             primeraInstruccionRuta36 = true
             currentSteps = 0
+            imagen.setImageResource(R.drawable.girarderecha)
         }
         else if (primeraInstruccionRuta36 && giro <= -80 && giro >= -110 && !segundaInstruccionRuta36) {
             cont++
             instrucciones.text = instruccionesRuta1[cont]
             segundaInstruccionRuta36 = true
             currentSteps = 0
+            imagen.setImageResource(R.drawable.caminar)
         }
         else if (primeraInstruccionRuta36 && segundaInstruccionRuta36 && currentSteps >= 5){
             instrucciones.text = "¡Ha llegado a su destino!"
             terceraInstruccionRuta36 = true
+            imagen.setImageResource(R.drawable.tick)
         }
     }
 
@@ -222,16 +231,19 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             instrucciones.text = instruccionesEscalera34[cont]
             primeraInstruccionPerdido36 = true
             currentSteps = 0
+            imagen.setImageResource(R.drawable.caminar)
         }
         else if (currentSteps >= 20 && primeraInstruccionPerdido36 && !segundaInstruccionPerdidio36) {
             cont++
             instrucciones.text = "Ha llegado a su destino"
             segundaInstruccionPerdidio36 = true
+            imagen.setImageResource(R.drawable.tick)
         }
     }
 
     private fun estaPerdido(){
         instrucciones.text = "Si se ha perdido busque un código QR y le indicaremos la ruta desde allí"
+        imagen.setImageResource(R.drawable.qr)
     }
 
     private fun activarQR(){
