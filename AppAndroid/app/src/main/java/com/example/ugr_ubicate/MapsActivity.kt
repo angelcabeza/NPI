@@ -101,8 +101,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var lastUpdate1: Long = 0
 
     //Estas son las variables que marcan si se ha hecho uno de los gestos. Después de usarlas ponlas a 0
-    private var swipeExit: Boolean = false
-
+    private var swipeOffFirstStep: Boolean = false
+    private var swipeOnFirstStep: Boolean = false
 
 
     // Creacion del objeto
@@ -163,15 +163,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     val horaActual = System.currentTimeMillis()
 
-                    if (y > 80 && z > 0){
+                    if (y > 70 && z > 0){
                         lastUpdate1 = horaActual
                     }
 
-                    if ( ((horaActual - lastUpdate1) <= 400) && x > 50){
-                        lastUpdate1 -= 400
-                        swipeExit = true
+                    if (horaActual - lastUpdate1 <= 400 && y < 50 && x < 50 && x > -50 && z > 0){
+                        swipeOffFirstStep = true
                     }
-                    if ( ((horaActual - lastUpdate1) <= 400) && y < 50 && x < 50 && x > -50 && z > 0){
+
+                    if (swipeOffFirstStep && y > 70 && z > 0 && x < 50 && x > -50){
                         this@MapsActivity.runOnUiThread(Runnable {
                             if (currentMarker == -1){
                                 currentPlace = spType.selectedItemPosition
@@ -182,17 +182,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                 pasarSiguienteMarcador()
                             }
                         })
+                        swipeOffFirstStep = false
+                        swipeOnFirstStep = false
                         lastUpdate1 -= 400
                     }
-                    else{
-                        if( ((horaActual - lastUpdate1) <= 400) && y < 85 && x < 50 && x > -50 && z < 0) {
-                            lastUpdate1 -= 400
-                            rutaActiva = true
-                            this@MapsActivity.runOnUiThread(Runnable {
-                                fetchRuta().start()
-                            })
-                        }
+
+                    if (horaActual - lastUpdate1 <= 400 && y <85 && x < 50 && x > -50 && z < 0){
+                        swipeOnFirstStep = true
                     }
+
+                    if (swipeOnFirstStep && y > 70 && z > 0 && x < 50 && x > -50){
+                        lastUpdate1 -= 400
+                        rutaActiva = true
+                        this@MapsActivity.runOnUiThread(Runnable {
+                            fetchRuta().start()
+                        })
+                        swipeOffFirstStep = false
+                        swipeOnFirstStep = false
+                    }
+
+                    if(horaActual - lastUpdate1 > 400){
+                        swipeOffFirstStep = false
+                        swipeOnFirstStep = false
+                    }
+
                 }
             }
         }
