@@ -325,13 +325,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun comprobarUsuarioEnMarcadorRuta(){
         var distancia : FloatArray = FloatArray(1)
 
-        Location.distanceBetween(coordMarcadorRuta!!.latitude, coordMarcadorRuta!!.longitude,
-            latitudUsuario!!, longitudUsuario!!, distancia)
+        if (coordMarcadorRuta != null && longitudUsuario != null && latitudUsuario != null) {
+            Location.distanceBetween(
+                coordMarcadorRuta!!.latitude, coordMarcadorRuta!!.longitude,
+                latitudUsuario!!, longitudUsuario!!, distancia
+            )
 
-        if (distancia[0] <= distanciaMinMarcador){
-            Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_LONG).show()
 
-            pasarSiguienteMarcadorRuta()
+            if (distancia[0] <= distanciaMinMarcador) {
+                Toast.makeText(this, ruta!!.getTypeManeuver(currentMarcadorRuta), Toast.LENGTH_LONG)
+                    .show()
+
+                pasarSiguienteMarcadorRuta()
+            }
         }
     }
 
@@ -747,42 +753,44 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun actualizarFlechaMarcador() {
-        this@MapsActivity.runOnUiThread(Runnable {
-            if (flechaPuntoRuta != null){
-                flechaPuntoRuta!!.isVisible = false
+        if (coordMarcadorRuta != null && latitudUsuario != null && longitudUsuario != null){
+            this@MapsActivity.runOnUiThread(Runnable {
+                if (flechaPuntoRuta != null){
+                    flechaPuntoRuta!!.isVisible = false
+                }
+            })
+
+            val locationUser = Location("user") //provider name is unnecessary
+            locationUser.latitude = latitudUsuario!! //your coords of course
+            locationUser.longitude = longitudUsuario!!
+
+            val locationMarker = Location("marker") //provider name is unnecessary
+            locationMarker.latitude = coordMarcadorRuta!!.latitude //your coords of course
+            locationMarker.longitude = coordMarcadorRuta!!.longitude
+
+            var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
+            var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
+
+            if (flechaDibujada){
+                this@MapsActivity.runOnUiThread(Runnable {
+                    flechaPuntoRuta!!.position = nueva_pos
+                    flechaPuntoRuta!!.rotation = nueva_rotacion
+                    flechaPuntoRuta!!.isVisible = rutaActiva
+                })
             }
-        })
+            else{
+                this@MapsActivity.runOnUiThread(Runnable {
+                    flechaPuntoRuta = map.addMarker(MarkerOptions()
+                        .position(nueva_pos)
+                        .flat(true)
+                        .rotation(nueva_rotacion)
+                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.arrow_next_marker_24))
+                        .visible(rutaActiva))
+                })
+            }
 
-        val locationUser = Location("user") //provider name is unnecessary
-        locationUser.latitude = latitudUsuario!! //your coords of course
-        locationUser.longitude = longitudUsuario!!
-
-        val locationMarker = Location("marker") //provider name is unnecessary
-        locationMarker.latitude = coordMarcadorRuta!!.latitude //your coords of course
-        locationMarker.longitude = coordMarcadorRuta!!.longitude
-
-        var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
-        var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
-
-        if (flechaDibujada){
-            this@MapsActivity.runOnUiThread(Runnable {
-                flechaPuntoRuta!!.position = nueva_pos
-                flechaPuntoRuta!!.rotation = nueva_rotacion
-                flechaPuntoRuta!!.isVisible = rutaActiva
-            })
+            flechaDibujada = true
         }
-        else{
-            this@MapsActivity.runOnUiThread(Runnable {
-                flechaPuntoRuta = map.addMarker(MarkerOptions()
-                    .position(nueva_pos)
-                    .flat(true)
-                    .rotation(nueva_rotacion)
-                    .icon(BitmapFromVector(getApplicationContext(), R.drawable.arrow_next_marker_24))
-                    .visible(rutaActiva))
-            })
-        }
-
-        flechaDibujada = true
     }
 
 
