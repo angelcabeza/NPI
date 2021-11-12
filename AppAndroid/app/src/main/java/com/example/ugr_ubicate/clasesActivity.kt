@@ -99,6 +99,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 instrucciones.visibility = View.VISIBLE
                 textGesto.visibility = View.VISIBLE
                 imagen.visibility = View.VISIBLE
+                currentSteps = 0
             }
         }
 
