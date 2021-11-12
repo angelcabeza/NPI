@@ -163,7 +163,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     val horaActual = System.currentTimeMillis()
 
-                    if (y > 70 && z > 0){
+                    if (y > 80 && z > 0){
                         lastUpdate1 = horaActual
                     }
 
