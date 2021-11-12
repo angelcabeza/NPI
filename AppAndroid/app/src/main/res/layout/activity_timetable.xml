@@ -4,31 +4,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="false"
+    android:focusable="false"
     tools:context=".TimeTableActivity">
 
     <Button
         android:id="@+id/button25"
-        android:layout_width="77dp"
-        android:layout_height="44dp"
+        android:layout_width="76dp"
+        android:layout_height="48dp"
         android:text="N.P.I"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button18"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/button21"
-        app:layout_constraintTop_toBottomOf="@+id/button19"
-        app:layout_constraintVertical_bias="0.55"
+        app:layout_constraintTop_toBottomOf="@+id/button16"
+        app:layout_constraintVertical_bias="0.003"
         tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/button16"
         android:layout_width="76dp"
-        android:layout_height="44dp"
+        android:layout_height="47dp"
         android:text="N.P.I"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button18"
-        app:layout_constraintStart_toEndOf="@+id/button21"
+        app:layout_constraintEnd_toStartOf="@+id/button20"
+        app:layout_constraintStart_toEndOf="@+id/button15"
         app:layout_constraintTop_toBottomOf="@+id/button19"
-        app:layout_constraintVertical_bias="0.482"
+        app:layout_constraintVertical_bias="0.484"
         tools:ignore="MissingConstraints" />
 
     <Button
@@ -98,6 +100,7 @@
         android:text="N.P.I"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button16"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button15"
         tools:ignore="MissingConstraints" />
@@ -145,10 +148,10 @@
         android:layout_height="46dp"
         android:layout_marginTop="8dp"
         android:text="N.P.I"
+        android:visibility="invisible"
         app:layout_constraintEnd_toStartOf="@+id/button20"
         app:layout_constraintStart_toEndOf="@+id/button15"
-        tools:ignore="MissingConstraints"
-        android:visibility="invisible"/>
+        tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/button13"
@@ -279,7 +282,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="10dp"
+        android:editable="false"
         android:ems="10"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         android:inputType="textPersonName"
         android:text="DESCANSO"
         app:layout_constraintBottom_toTopOf="@+id/button20"

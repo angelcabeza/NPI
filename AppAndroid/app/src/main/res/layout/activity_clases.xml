@@ -18,7 +18,11 @@
         android:layout_marginBottom="100dp"
         android:editable="false"
         android:ems="10"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         android:inputType="textPersonName"
+        android:linksClickable="false"
+        android:longClickable="false"
         android:text="Indique la ruta que desee" />
 
     <Button
@@ -56,6 +60,20 @@
         android:textColor="#F40202"
         android:textColorHint="#FA0101"
         android:layout_centerHorizontal="true"/>
+
+    <ImageView
+        android:id="@+id/imagenClases"
+        android:layout_width="210dp"
+        android:layout_height="149dp"
+        android:layout_below="@+id/instruccionesContainer"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="89dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="112dp"
+        android:layout_marginBottom="87dp"
+        app:srcCompat="@drawable/salirpuerta" />
 
 
 </RelativeLayout>

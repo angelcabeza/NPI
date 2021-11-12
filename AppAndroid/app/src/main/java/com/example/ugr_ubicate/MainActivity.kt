@@ -74,17 +74,23 @@ class MainActivity : AppCompatActivity() {
 
                 if (Math.abs(xPos) > Math.abs(yPos) && !enPausa) {
                     if (xPos > 0 && !yaLLamado) {
-                        val intent = Intent(this, clasesActivity::class.java)
-                        startActivity(intent)
-                        yaLLamado = true
+                        if (Math.abs(xPos) > 500) {
+                            val intent = Intent(this, clasesActivity::class.java)
+                            startActivity(intent)
+                            yaLLamado = true
+                        }
                     } else {
-                        val intent = Intent(this, MapsActivity::class.java)
-                        startActivity(intent)
-                        yaLLamado = true
+                        if (Math.abs(xPos) > 500) {
+                            val intent = Intent(this, MapsActivity::class.java)
+                            startActivity(intent)
+                            yaLLamado = true
+                        }
                     }
                 } else if (!enPausa && !yaLLamado) {
-                    val intent = Intent(this, TimeTableActivity::class.java)
-                    startActivity(intent)
+                    if (Math.abs(yPos) > 500) {
+                        val intent = Intent(this, TimeTableActivity::class.java)
+                        startActivity(intent)
+                    }
                 }
             } else{
                 contDedos = 0
