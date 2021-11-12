@@ -5,12 +5,12 @@ Created on Mon Nov  8 19:02:36 2021
 @author: mario
 """
 
-import Tkinter as tk
-from tkinter import * 
 from Tkinter import Frame, Canvas, YES, BOTH
-from PIL import ImageTk
+from PIL import ImageTk, ImageFile
 import sys
 import time
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 sys.path.insert(0, "../lib")
 import Leap
@@ -53,16 +53,33 @@ class TouchPointListener(Leap.Listener):
         self.puntero = None
         self.punteroTop = None
         
+        self.height_im = 200
+        self.width_im = 300
+        
+        self.height_im_maps = 600
+        self.width_im_maps  = 800
+        
+        
         # Lista de imagenes y descripciones de sitios
-        self.photos = [ImageTk.PhotoImage(file='../imagenes/imagen1.png'), 
-                  ImageTk.PhotoImage(file='../imagenes/imagen2.jpg'),  
-                  ImageTk.PhotoImage(file='../imagenes/imagen3.jpeg')]
+        self.photos = [ ImageTk.PhotoImage(file='../imagenes/alhambra.jpg', height=self.height_im, width=self.width_im), 
+                        ImageTk.PhotoImage(file='../imagenes/facultad_ciencias.jpg', height=self.height_im, width=self.width_im), 
+                        ImageTk.PhotoImage(file='../imagenes/catedral.jpg', height=self.height_im, width=self.width_im), 
+                        ImageTk.PhotoImage(file='../imagenes/nevada.jpg', height=self.height_im, width=self.width_im), 
+                        ImageTk.PhotoImage(file='../imagenes/pico_veleta.jpg', height=self.height_im, width=self.width_im) ]
         
-        self.maps = [ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif'), 
-                  ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif'),  
-                  ImageTk.PhotoImage(file='../imagenes/imagenes_maps.jfif')]
+        self.maps = [ ImageTk.PhotoImage(file='../imagenes/ruta_alhambra.png', height=self.height_im_maps, width=self.width_im_maps), 
+                      ImageTk.PhotoImage(file='../imagenes/ruta_facultad_ciencias.png', height=self.height_im_maps, width=self.width_im_maps), 
+                      ImageTk.PhotoImage(file='../imagenes/ruta_catedral.png', height=self.height_im_maps, width=self.width_im_maps), 
+                      ImageTk.PhotoImage(file='../imagenes/ruta_nevada.png', height=self.height_im_maps, width=self.width_im_maps), 
+                      ImageTk.PhotoImage(file='../imagenes/ruta_pico_veleta.png', height=self.height_im_maps, width=self.width_im_maps) ]
         
-        self.description = ["Descripcion sitio 1", "Descripcion sitio 2", "Descripcion sitio 3"]
+        self.description = [ "Alhambra",
+                             "Campus de Ciencias",
+                             "Catedral",
+                             "Centro Comercial Nevada",
+                             "Pico Veleta en Sierra Nevada" ]
+        
+        
         # Puntero que indica en que sitio estamos
         self.puntero_sitios = 0
         self.inSitios = False
@@ -222,21 +239,33 @@ class TouchPointListener(Leap.Listener):
         
     
     def crear_botones_localCanvas(self):
-        # Sitios window
-        rect_imagen_sitio = self.localCanvas.create_image(650, 400, image=self.photos[self.puntero_sitios], anchor = 's')
-        
-        rec_desc_rect_sitio =  self.localCanvas.create_rectangle(350, 400, 700,
-                                                              450, fill="blue")
-        
-        text_descripcion_sitios = self.localCanvas.create_text(400, 425,
-                                                        text=self.description[self.puntero_sitios], width=150)
-        
-        
         rect_cerrarSitios = self.localCanvas.create_rectangle(self.col2, self.fila3 , self.col2+self.anchura_boton,
                                                               self.fila3+self.altura_boton, fill="red")
         
         btn_cerrarSitios = self.localCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
                                                         text="Cerrar", width=self.anchura_texto)
+        
+               
+        rec_desc_rect_sitio =  self.localCanvas.create_rectangle(self.col2, self.fila3-20-70, self.col2+self.anchura_boton,
+                                                                 self.fila3-20,
+                                                                 fill="blue")
+        
+        text_descripcion_sitios = self.localCanvas.create_text(self.col2+self.fila_offset, self.fila3-20-35,
+                                                               text=self.description[self.puntero_sitios], width=150)
+        
+        # Sitios window
+        rect_imagen_sitio = self.localCanvas.create_image(self.col2+(self.anchura_boton//2), self.fila3-(self.height_im//2)-100,
+                                                          image=self.photos[self.puntero_sitios])
+    
+    def crear_canvas_maps(self):
+        rect_cerrarSitios = self.localCanvas.create_rectangle(self.col2, self.fila3 , self.col2+self.anchura_boton,
+                                                              self.fila3+self.altura_boton, fill="red")
+        
+        btn_cerrarSitios = self.localCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
+                                                        text="Cerrar", width=self.anchura_texto)
+        
+        rect_imagen_sitio = self.localCanvas.create_image(self.col2+(self.anchura_boton//2), self.fila3-(self.height_im//2)-(self.altura_boton//2)-20,
+                                                          image=self.maps[self.puntero_sitios])
         
         
     def usuario_click(self):
@@ -285,14 +314,7 @@ class TouchPointListener(Leap.Listener):
         self.mapsCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.mapsCanvas.pack()
         
-        mapa = self.mapsCanvas.create_image(500, 450, image=self.maps[self.puntero_sitios], anchor = 's')
-
-        cerrar_mapa = self.mapsCanvas.create_rectangle(self.col2, self.fila3, self.col2+self.anchura_boton,
-                                                            self.fila3+self.altura_boton, fill="red")
-        
-        
-        text_cerrar_mapa = self.mapsCanvas.create_text(self.col2+self.fila_offset, self.fila3+self.col_offset,
-                                                      text="Cerrar", width=self.anchura_texto)
+        self.crear_canvas_maps()
         
         
     def button_sitios_accion(self):
@@ -341,6 +363,7 @@ class TouchPointListener(Leap.Listener):
         self.localCanvas = Canvas( self.paintBox, width = str(self.ancho_canvas), height = str(self.alto_canvas) )
         self.localCanvas.pack()
         self.crear_botones_localCanvas()
+#        self.crear_canvas_maps()
     
 
 
