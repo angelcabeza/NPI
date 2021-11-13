@@ -15,10 +15,6 @@ import androidx.core.view.MotionEventCompat
 import java.util.jar.Manifest
 
 class MainActivity : AppCompatActivity() {
-    var lastx = 0
-    var lasty = 9999
-    var llamado_y = false
-    var llamado_x = false
     var enPausa = false
     var yaLLamado = false
     var xPosIni = -1
