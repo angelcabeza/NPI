@@ -143,6 +143,8 @@ class TouchPointListener(Leap.Listener):
                 if 1 < tiempo_cerrados and tiempo_cerrados < 3:
                     self.usuario_click()
 
+
+
             if (orientation_palm[0] < -0.9 and extendedFingers == 5):
                 cont = 0
                 for i in hand.fingers:

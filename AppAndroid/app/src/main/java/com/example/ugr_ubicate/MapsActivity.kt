@@ -84,7 +84,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLocationRequest: LocationRequest? = null
 
     private val UPDATE_INTERVAL = (1 * 1000 /* 1 secs */).toLong()
-    private val FASTEST_INTERVAL: Long = 500 /* 2 sec */
+    private val FASTEST_INTERVAL: Long = 500 /* 0.5 sec */
 
     private var flechaPuntoRuta: Marker? = null
     private var flechaDibujada : Boolean = false
@@ -432,7 +432,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         actualizarFlechaMarcador()
-        Log.e("Activar flecha", "mostrarPuntosRuta")
 
         this@MapsActivity.runOnUiThread(Runnable {
             if (latitudUsuario != null && longitudUsuario != null){
@@ -503,6 +502,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     LatLng(lat, lng), 13.0F)
                 )
             })
+        }
+    }
+
+    private fun actualizarFlechaMarcador() {
+        if (coordMarcadorRuta != null && latitudUsuario != null && longitudUsuario != null){
+            this@MapsActivity.runOnUiThread(Runnable {
+                if (flechaPuntoRuta != null){
+                    flechaPuntoRuta!!.isVisible = false
+                }
+            })
+
+            val locationUser = Location("user") //provider name is unnecessary
+            locationUser.latitude = latitudUsuario!! //your coords of course
+            locationUser.longitude = longitudUsuario!!
+
+            val locationMarker = Location("marker") //provider name is unnecessary
+            locationMarker.latitude = coordMarcadorRuta!!.latitude //your coords of course
+            locationMarker.longitude = coordMarcadorRuta!!.longitude
+
+            var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
+            var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
+
+            if (flechaDibujada){
+                this@MapsActivity.runOnUiThread(Runnable {
+                    flechaPuntoRuta!!.position = nueva_pos
+                    flechaPuntoRuta!!.rotation = nueva_rotacion
+                    flechaPuntoRuta!!.isVisible = rutaActiva
+                })
+            }
+            else{
+                this@MapsActivity.runOnUiThread(Runnable {
+                    flechaPuntoRuta = map.addMarker(MarkerOptions()
+                        .position(nueva_pos)
+                        .flat(true)
+                        .rotation(nueva_rotacion)
+                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.arrow_next_marker_24))
+                        .visible(rutaActiva))
+                })
+            }
+
+            flechaDibujada = true
         }
     }
 
@@ -620,7 +660,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
         ){
-
         }
 
         var etsiitMarcador : HashMap<String, Object> = HashMap()
@@ -765,46 +804,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun actualizarFlechaMarcador() {
-        if (coordMarcadorRuta != null && latitudUsuario != null && longitudUsuario != null){
-            this@MapsActivity.runOnUiThread(Runnable {
-                if (flechaPuntoRuta != null){
-                    flechaPuntoRuta!!.isVisible = false
-                }
-            })
 
-            val locationUser = Location("user") //provider name is unnecessary
-            locationUser.latitude = latitudUsuario!! //your coords of course
-            locationUser.longitude = longitudUsuario!!
-
-            val locationMarker = Location("marker") //provider name is unnecessary
-            locationMarker.latitude = coordMarcadorRuta!!.latitude //your coords of course
-            locationMarker.longitude = coordMarcadorRuta!!.longitude
-
-            var nueva_pos : LatLng = LatLng(latitudUsuario!!,longitudUsuario!!)
-            var nueva_rotacion : Float = locationUser.bearingTo(locationMarker)
-
-            if (flechaDibujada){
-                this@MapsActivity.runOnUiThread(Runnable {
-                    flechaPuntoRuta!!.position = nueva_pos
-                    flechaPuntoRuta!!.rotation = nueva_rotacion
-                    flechaPuntoRuta!!.isVisible = rutaActiva
-                })
-            }
-            else{
-                this@MapsActivity.runOnUiThread(Runnable {
-                    flechaPuntoRuta = map.addMarker(MarkerOptions()
-                        .position(nueva_pos)
-                        .flat(true)
-                        .rotation(nueva_rotacion)
-                        .icon(BitmapFromVector(getApplicationContext(), R.drawable.arrow_next_marker_24))
-                        .visible(rutaActiva))
-                })
-            }
-
-            flechaDibujada = true
-        }
-    }
 
 
     // MANAGE PERMISSION
