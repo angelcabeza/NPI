@@ -47,6 +47,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var cont = 0
     val ACTIVITY_RQ = 101
     val CAMERA_RQ = 102
+    val AUDIO_RQ = 103
 
 
     //Variable del gesto de agitación
@@ -105,7 +106,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         checkForPermission(android.Manifest.permission.CAMERA,"camera",CAMERA_RQ)
         checkForPermission(android.Manifest.permission.ACTIVITY_RECOGNITION,"activity",ACTIVITY_RQ)
-
+        checkForPermission(android.Manifest.permission.RECORD_AUDIO,"audio",AUDIO_RQ)
 
         // Declaro los sensores
         sensorManagerPodometro = getSystemService(Context.SENSOR_SERVICE) as SensorManager
