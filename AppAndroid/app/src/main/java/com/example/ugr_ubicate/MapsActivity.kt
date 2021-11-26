@@ -3,6 +3,7 @@ package com.example.ugr_ubicate
 import android.Manifest
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,7 +13,12 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
+import android.location.LocationManager
 import android.os.*
+import android.provider.Settings
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -37,17 +43,9 @@ import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
-import com.google.android.gms.maps.model.Marker
-import com.google.maps.android.SphericalUtil
-import android.content.DialogInterface
-
-import android.content.Intent
-
-import android.location.LocationManager
-import android.provider.Settings
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListener  {
     // Siguiendo este tutorial: https://youtu.be/pjFcJ6EB8Dg
 
     private lateinit var map: GoogleMap
@@ -58,11 +56,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var spType : Spinner
     private lateinit var btFind : Button
     private lateinit var btUbicacion : Button
+    private lateinit var toggleButton: ToggleButton
 
     private var mainHandler : Handler = Handler()
     private lateinit var progressDialog : ProgressDialog
 
     private val REQUEST_PERMISSION_CODE = 100
+    private val permission = 100
+    private var logTag = "VoiceRecognitionActivity"
+    private lateinit var speech: SpeechRecognizer
+    private lateinit var recognizerIntent: Intent
+    private lateinit var textoReconocido : String
 
     private var latitudUsuario: Double? = null
     private var longitudUsuario: Double? = null
@@ -122,6 +126,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         spType = findViewById(R.id.sp_type)
         btFind = findViewById(R.id.bt_find)
         btUbicacion = findViewById(R.id.bt_ubicacion)
+        toggleButton = findViewById(R.id.toggleButton)
+
+        speech = SpeechRecognizer.createSpeechRecognizer(this)
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
@@ -131,6 +138,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         obtenerUltimaUbicacion()
         startLocationUpdates()
+
+        Log.i(logTag, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this))
+        speech.setRecognitionListener(this)
+        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "US-en")
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                ActivityCompat.requestPermissions(this@MapsActivity,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    permission)
+            } else {
+                speech.stopListening()
+            }
+        }
 
         btFind.setOnClickListener{
             currentPlace = spType.selectedItemPosition
@@ -212,6 +236,72 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         sm.registerListener(se,sens_grav,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
+    override fun onResults(results: Bundle?) {
+        Log.i(logTag, "onResults")
+        val matches = results!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        var text = ""
+        if (matches != null) {
+            for (result in matches) text = """
+            $result
+            """.trimIndent()
+        }
+        textoReconocido = text
+
+        // private val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
+        var index_place : Int = placeNameList.indexOf(textoReconocido)
+        if (index_place != -1){
+            currentPlace = index_place
+            fetchMarcadores().start()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        speech.destroy()
+        Log.i(logTag, "destroy")
+    }
+    override fun onReadyForSpeech(params: Bundle?) {
+        TODO("Not yet implemented")
+    }
+    override fun onRmsChanged(rmsdB: Float) {
+    }
+    override fun onBufferReceived(buffer: ByteArray?) {
+        TODO("Not yet implemented")
+    }
+    override fun onPartialResults(partialResults: Bundle?) {
+        TODO("Not yet implemented")
+    }
+    override fun onEvent(eventType: Int, params: Bundle?) {
+        TODO("Not yet implemented")
+    }
+    override fun onBeginningOfSpeech() {
+        Log.i(logTag, "onBeginningOfSpeech")
+    }
+    override fun onEndOfSpeech() {
+        toggleButton.isChecked = false
+    }
+    override fun onError(error: Int) {
+        val errorMessage: String = getErrorText(error)
+        Log.d(logTag, "FAILED $errorMessage")
+        toggleButton.isChecked = false
+        textoReconocido = ""
+    }
+    private fun getErrorText(error: Int): String {
+        var message = ""
+        message = when (error) {
+            SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
+            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
+            SpeechRecognizer.ERROR_NETWORK -> "Network error"
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+            SpeechRecognizer.ERROR_NO_MATCH -> "No match"
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "RecognitionService busy"
+            SpeechRecognizer.ERROR_SERVER -> "error from server"
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
+            else -> "Didn't understand, please try again."
+        }
+        return message
+    }
 
     inner class fetchMarcadores : Thread() {
         var data : String = ""
