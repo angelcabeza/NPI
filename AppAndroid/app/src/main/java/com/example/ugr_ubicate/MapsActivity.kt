@@ -57,7 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     private lateinit var supportMapFragment: SupportMapFragment
 
     private lateinit var spType : Spinner
-    private lateinit var btFind : Button
+    //private lateinit var btFind : Button
     private lateinit var btUbicacion : Button
 
     private var mainHandler : Handler = Handler()
@@ -106,7 +106,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     private var swipeOnFirstStep: Boolean = false
 
 
-    private lateinit var returnedText: TextView
+    //private lateinit var returnedText: TextView
     private lateinit var toggleButton: ToggleButton
     private lateinit var progressBar: ProgressBar
     private lateinit var speech: SpeechRecognizer
@@ -130,7 +130,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
         ///
 
         spType = findViewById(R.id.sp_type)
-        btFind = findViewById(R.id.bt_find)
+        //btFind = findViewById(R.id.bt_find)
         btUbicacion = findViewById(R.id.bt_ubicacion)
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
@@ -142,11 +142,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
         obtenerUltimaUbicacion()
         startLocationUpdates()
 
-        btFind.setOnClickListener{
-            currentPlace = spType.selectedItemPosition
-
-            fetchMarcadores().start()
-        }
+//        btFind.setOnClickListener{
+//            currentPlace = spType.selectedItemPosition
+//
+//            fetchMarcadores().start()
+//        }
 
         btUbicacion.setOnClickListener{
             this@MapsActivity.runOnUiThread(Runnable {
@@ -222,7 +222,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
         sm.registerListener(se,sens_grav,SensorManager.SENSOR_DELAY_FASTEST)
 
 
-        returnedText = findViewById(R.id.textView)
+        //returnedText = findViewById(R.id.textView)
         progressBar = findViewById(R.id.progressBar)
         toggleButton = findViewById(R.id.toggleButton)
         progressBar.visibility = View.VISIBLE
@@ -928,7 +928,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     override fun onError(error: Int) {
         val errorMessage: String = getErrorText(error)
         Log.d(logTag, "FAILED $errorMessage")
-        returnedText.text = errorMessage
+        //returnedText.text = errorMessage
         toggleButton.isChecked = false
     }
     private fun getErrorText(error: Int): String {
@@ -952,12 +952,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
         val matches = results!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         var text = matches?.get(0)
 
-        returnedText.text = text
+        //returnedText.text = text
         // placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
         var index_place = placeNameList.indexOf(text)
         if (index_place != -1){
             currentPlace = index_place
             fetchMarcadores().start()
+        }
+        else{
+            Toast.makeText(this@MapsActivity, "Solo vale Banco, \"Hospital\", \"Bar\" o " +
+                    "\"Edificios Universidad\"",
+                Toast.LENGTH_SHORT).show()
         }
     }
 }

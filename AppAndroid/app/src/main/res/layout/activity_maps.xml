@@ -33,11 +33,11 @@
                 android:id="@+id/bt_ubicacion"
                 android:text="Ubicacion"/>
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_find"
-                android:text="Buscar"/>
+<!--            <Button-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:id="@+id/bt_find"-->
+<!--                android:text="Buscar"/>-->
         </LinearLayout>
 
         <LinearLayout
@@ -78,13 +78,13 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/progressBar"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="47dp" />
+<!--            <TextView-->
+<!--                android:id="@+id/textView"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_below="@+id/progressBar"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_marginTop="47dp" />-->
         </LinearLayout>
     </LinearLayout>
 

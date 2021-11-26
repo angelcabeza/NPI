@@ -223,7 +223,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             instrucciones.text = instruccionesRuta1[cont]
             if (!primeraInstruccionRuta36) {
                 var text = instrucciones.text
-                textToSpeechEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+                textToSpeechEngine?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             }
             primeraInstruccionRuta36 = true
             currentSteps = 0
