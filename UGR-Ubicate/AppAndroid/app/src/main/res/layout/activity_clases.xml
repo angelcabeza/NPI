@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".clasesActivity">
+
+    <EditText
+        android:id="@+id/titulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="75dp"
+        android:layout_marginTop="65dp"
+        android:layout_marginEnd="75dp"
+        android:layout_marginBottom="100dp"
+        android:editable="false"
+        android:ems="10"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:inputType="textPersonName"
+        android:linksClickable="false"
+        android:longClickable="false"
+        android:text="Indique la ruta que desee" />
+
+    <Button
+        android:id="@+id/ruta1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/titulo"
+        android:layout_centerHorizontal="true"
+        android:text="Ruta hacia clase 3.4" />
+
+    <TextView
+        android:id="@+id/instruccionesContainer"
+        android:layout_width="304dp"
+        android:layout_height="212dp"
+        android:layout_below="@+id/ruta1"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:justificationMode="inter_word"
+        android:text="TextView"
+        android:textColor="@color/black"
+        android:textSize="36dp" />
+
+    <TextView
+        android:id="@+id/textGesto"
+        android:layout_width="386dp"
+        android:layout_height="43dp"
+        android:layout_above="@+id/ruta1"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="44dp"
+        android:background="#FFFFFF"
+        android:text="Si se pierde agite el dispositivo con fuerza verticalmente ."
+        android:textColor="#F40202"
+        android:textColorHint="#FA0101"
+        android:layout_centerHorizontal="true"/>
+
+    <ImageView
+        android:id="@+id/imagenClases"
+        android:layout_width="210dp"
+        android:layout_height="149dp"
+        android:layout_below="@+id/instruccionesContainer"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="89dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="112dp"
+        android:layout_marginBottom="87dp"
+        app:srcCompat="@drawable/salirpuerta" />
+
+
+</RelativeLayout>
