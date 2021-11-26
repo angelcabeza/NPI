@@ -1,5 +1,7 @@
 package com.example.ugr_ubicate
 
+
+
 import android.Manifest
 import android.app.ProgressDialog
 import android.content.Context
@@ -20,6 +22,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -56,17 +59,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     private lateinit var spType : Spinner
     private lateinit var btFind : Button
     private lateinit var btUbicacion : Button
-    private lateinit var toggleButton: ToggleButton
 
     private var mainHandler : Handler = Handler()
     private lateinit var progressDialog : ProgressDialog
 
     private val REQUEST_PERMISSION_CODE = 100
-    private val permission = 100
-    private var logTag = "VoiceRecognitionActivity"
-    private lateinit var speech: SpeechRecognizer
-    private lateinit var recognizerIntent: Intent
-    private lateinit var textoReconocido : String
 
     private var latitudUsuario: Double? = null
     private var longitudUsuario: Double? = null
@@ -109,6 +106,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     private var swipeOnFirstStep: Boolean = false
 
 
+    private lateinit var returnedText: TextView
+    private lateinit var toggleButton: ToggleButton
+    private lateinit var progressBar: ProgressBar
+    private lateinit var speech: SpeechRecognizer
+    private lateinit var recognizerIntent: Intent
+    private var logTag = "VoiceRecognitionActivity"
+    private val permission = 101
+
+
     // Creacion del objeto
     override fun onCreate(savedInstanceState: Bundle?) {
         ///
@@ -126,9 +132,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
         spType = findViewById(R.id.sp_type)
         btFind = findViewById(R.id.bt_find)
         btUbicacion = findViewById(R.id.bt_ubicacion)
-        toggleButton = findViewById(R.id.toggleButton)
-
-        speech = SpeechRecognizer.createSpeechRecognizer(this)
 
         supportMapFragment = supportFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment
 
@@ -138,23 +141,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
 
         obtenerUltimaUbicacion()
         startLocationUpdates()
-
-        Log.i(logTag, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this))
-        speech.setRecognitionListener(this)
-        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "US-en")
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-        toggleButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                ActivityCompat.requestPermissions(this@MapsActivity,
-                    arrayOf(Manifest.permission.RECORD_AUDIO),
-                    permission)
-            } else {
-                speech.stopListening()
-            }
-        }
 
         btFind.setOnClickListener{
             currentPlace = spType.selectedItemPosition
@@ -234,73 +220,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
             }
         }
         sm.registerListener(se,sens_grav,SensorManager.SENSOR_DELAY_FASTEST)
-    }
 
-    override fun onResults(results: Bundle?) {
-        Log.i(logTag, "onResults")
-        val matches = results!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        var text = ""
-        if (matches != null) {
-            for (result in matches) text = """
-            $result
-            """.trimIndent()
-        }
-        textoReconocido = text
 
-        // private val placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
-        var index_place : Int = placeNameList.indexOf(textoReconocido)
-        if (index_place != -1){
-            currentPlace = index_place
-            fetchMarcadores().start()
+        returnedText = findViewById(R.id.textView)
+        progressBar = findViewById(R.id.progressBar)
+        toggleButton = findViewById(R.id.toggleButton)
+        progressBar.visibility = View.VISIBLE
+        speech = SpeechRecognizer.createSpeechRecognizer(this)
+        Log.i(logTag, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this))
+        speech.setRecognitionListener(this)
+        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "US-en")
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                progressBar.visibility = View.VISIBLE
+                progressBar.isIndeterminate = true
+                ActivityCompat.requestPermissions(this@MapsActivity,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    permission)
+            } else {
+                progressBar.isIndeterminate = false
+                progressBar.visibility = View.VISIBLE
+                speech.stopListening()
+            }
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        speech.destroy()
-        Log.i(logTag, "destroy")
-    }
-    override fun onReadyForSpeech(params: Bundle?) {
-        TODO("Not yet implemented")
-    }
-    override fun onRmsChanged(rmsdB: Float) {
-    }
-    override fun onBufferReceived(buffer: ByteArray?) {
-        TODO("Not yet implemented")
-    }
-    override fun onPartialResults(partialResults: Bundle?) {
-        TODO("Not yet implemented")
-    }
-    override fun onEvent(eventType: Int, params: Bundle?) {
-        TODO("Not yet implemented")
-    }
-    override fun onBeginningOfSpeech() {
-        Log.i(logTag, "onBeginningOfSpeech")
-    }
-    override fun onEndOfSpeech() {
-        toggleButton.isChecked = false
-    }
-    override fun onError(error: Int) {
-        val errorMessage: String = getErrorText(error)
-        Log.d(logTag, "FAILED $errorMessage")
-        toggleButton.isChecked = false
-        textoReconocido = ""
-    }
-    private fun getErrorText(error: Int): String {
-        var message = ""
-        message = when (error) {
-            SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
-            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
-            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
-            SpeechRecognizer.ERROR_NETWORK -> "Network error"
-            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
-            SpeechRecognizer.ERROR_NO_MATCH -> "No match"
-            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "RecognitionService busy"
-            SpeechRecognizer.ERROR_SERVER -> "error from server"
-            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
-            else -> "Didn't understand, please try again."
-        }
-        return message
     }
 
     inner class fetchMarcadores : Thread() {
@@ -905,8 +851,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
                     Toast.makeText(applicationContext, "$name permission granted", Toast.LENGTH_SHORT).show()
                 }
 
-                //shouldShowRequestPermissionRationale(permission) -> showDialog(permission,name,requestCode)
-
                 else -> ActivityCompat.requestPermissions(this,arrayOf(permission), requestCode)
             }
         }
@@ -928,8 +872,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
 
         when(requestCode) {
             REQUEST_PERMISSION_CODE  -> innerCheck("Ubicacion")
+            permission -> if (grantResults.isNotEmpty() && grantResults[0] == PackageManager
+                    .PERMISSION_GRANTED) {
+                speech.startListening(recognizerIntent)
+            } else {
+                Toast.makeText(this@MapsActivity, "Permission Denied!",
+                    Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
 
     private fun showDialog(permission: String, name: String, requestCode: Int) {
         val builder = AlertDialog.Builder(this)
@@ -944,5 +896,68 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
 
         val dialog = builder.create()
         dialog.show()
+    }
+
+
+
+    override fun onStop() {
+        super.onStop()
+        speech.destroy()
+        Log.i(logTag, "destroy")
+    }
+    override fun onReadyForSpeech(params: Bundle?) {
+    }
+    override fun onRmsChanged(rmsdB: Float) {
+        progressBar.progress = rmsdB.toInt()
+    }
+    override fun onBufferReceived(buffer: ByteArray?) {
+    }
+    override fun onPartialResults(partialResults: Bundle?) {
+    }
+    override fun onEvent(eventType: Int, params: Bundle?) {
+    }
+    override fun onBeginningOfSpeech() {
+        Log.i(logTag, "onBeginningOfSpeech")
+        progressBar.isIndeterminate = false
+        progressBar.max = 10
+    }
+    override fun onEndOfSpeech() {
+        progressBar.isIndeterminate = true
+        toggleButton.isChecked = false
+    }
+    override fun onError(error: Int) {
+        val errorMessage: String = getErrorText(error)
+        Log.d(logTag, "FAILED $errorMessage")
+        returnedText.text = errorMessage
+        toggleButton.isChecked = false
+    }
+    private fun getErrorText(error: Int): String {
+        var message = ""
+        message = when (error) {
+            SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
+            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
+            SpeechRecognizer.ERROR_NETWORK -> "Network error"
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+            SpeechRecognizer.ERROR_NO_MATCH -> "No match"
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "RecognitionService busy"
+            SpeechRecognizer.ERROR_SERVER -> "error from server"
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
+            else -> "Didn't understand, please try again."
+        }
+        return message
+    }
+    override fun onResults(results: Bundle?) {
+        Log.i(logTag, "onResults")
+        val matches = results!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        var text = matches?.get(0)
+
+        returnedText.text = text
+        // placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
+        var index_place = placeNameList.indexOf(text)
+        if (index_place != -1){
+            currentPlace = index_place
+            fetchMarcadores().start()
+        }
     }
 }
