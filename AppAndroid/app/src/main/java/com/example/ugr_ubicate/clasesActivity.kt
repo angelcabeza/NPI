@@ -12,6 +12,9 @@ import android.view.View
 import android.widget.TextView
 import android.hardware.SensorEventListener
 import android.os.Build
+import android.speech.tts.TextToSpeech
+import android.speech.tts.TextToSpeech.OnInitListener
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -59,6 +62,9 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     var agitacionDetectada1 = false
     var agitacionDetectada2 = false
 
+    // TextToSpeech
+    private var textToSpeechEngine: TextToSpeech? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_clases)
@@ -70,6 +76,13 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         if (sitio != null)
             perdido = true
 
+        textToSpeechEngine = TextToSpeech(
+            this
+        ) { status ->
+            if (status != TextToSpeech.SUCCESS) {
+                Log.e("TTS", "Inicio de la síntesis fallido")
+            }
+        }
         instrucciones = findViewById(R.id.instruccionesContainer)
         textGesto = findViewById(R.id.textGesto)
         imagen = findViewById(R.id.imagenClases)
@@ -208,6 +221,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         if (currentSteps >= 10 && !primeraInstruccionRuta36){
             cont++
             instrucciones.text = instruccionesRuta1[cont]
+            if (!primeraInstruccionRuta36) {
+                var text = instrucciones.text
+                textToSpeechEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+            }
             primeraInstruccionRuta36 = true
             currentSteps = 0
             imagen.setImageResource(R.drawable.girarderecha)
