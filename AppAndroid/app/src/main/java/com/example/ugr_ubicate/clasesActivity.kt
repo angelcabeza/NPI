@@ -225,9 +225,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         if (currentSteps >= 10 && !primeraInstruccionRuta36){
             cont++
             instrucciones.text = instruccionesRuta1[cont]
-            if (!primeraInstruccionRuta36) {
-                textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
-            }
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             primeraInstruccionRuta36 = true
             currentSteps = 0
             imagen.setImageResource(R.drawable.girarderecha)
