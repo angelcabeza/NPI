@@ -46,6 +46,8 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
     private var terceraInstruccionRuta36 = false
     private var primeraInstruccionPerdido36 = false
     private var segundaInstruccionPerdidio36 = false
+    private var perdido1 = false
+    private var primeraInstruccionPerdidoDicha = false
 
     private var cont = 0
     val ACTIVITY_RQ = 101
@@ -75,6 +77,8 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
         if (sitio != null)
             perdido = true
+        else
+            perdido = false
 
         textToSpeechEngine = TextToSpeech(
             this
@@ -99,10 +103,10 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         } else{
             titulo.visibility = View.INVISIBLE
             ruta1.visibility = View.INVISIBLE
-            imagen.visibility = View.INVISIBLE
             instrucciones.text = instruccionesEscalera34[cont]
             textGesto.visibility = View.VISIBLE
             imagen.setImageResource(R.drawable.girarderecha)
+            imagen.visibility = View.VISIBLE
         }
 
         if (!perdido) {
@@ -110,6 +114,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
                 titulo.visibility = View.INVISIBLE
                 ruta1.visibility = View.INVISIBLE
                 instrucciones.text = instruccionesRuta1[cont]
+                textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
                 instrucciones.visibility = View.VISIBLE
                 textGesto.visibility = View.VISIBLE
                 imagen.visibility = View.VISIBLE
@@ -125,7 +130,6 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         sensorManagerPodometro = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensorManagerBrujula = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensorManagerAcelerometro = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -183,7 +187,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         if (!agitacionDetectada1 && !perdido)
             ruta1()
 
-        if (agitacionDetectada1 && !agitacionDetectada2)
+        if (agitacionDetectada1 && !agitacionDetectada2 && !perdido1)
             estaPerdido()
 
         if (agitacionDetectada2)
@@ -222,8 +226,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
             cont++
             instrucciones.text = instruccionesRuta1[cont]
             if (!primeraInstruccionRuta36) {
-                var text = instrucciones.text
-                textToSpeechEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+                textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             }
             primeraInstruccionRuta36 = true
             currentSteps = 0
@@ -232,6 +235,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         else if (primeraInstruccionRuta36 && giro <= -80 && giro >= -110 && !segundaInstruccionRuta36) {
             cont++
             instrucciones.text = instruccionesRuta1[cont]
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             segundaInstruccionRuta36 = true
             currentSteps = 0
             imagen.setImageResource(R.drawable.caminar)
@@ -239,14 +243,20 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         else if (primeraInstruccionRuta36 && segundaInstruccionRuta36 && currentSteps >= 5){
             instrucciones.text = "¡Ha llegado a su destino!"
             terceraInstruccionRuta36 = true
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             imagen.setImageResource(R.drawable.tick)
         }
     }
 
     fun rutaEscalera34(){
+        if (!primeraInstruccionPerdidoDicha) {
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+            primeraInstruccionPerdidoDicha = true
+        }
         if (!primeraInstruccionPerdido36 && giro <= -80 && giro >= -110 && !segundaInstruccionPerdidio36){
             cont++
             instrucciones.text = instruccionesEscalera34[cont]
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             primeraInstruccionPerdido36 = true
             currentSteps = 0
             imagen.setImageResource(R.drawable.caminar)
@@ -254,6 +264,7 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
         else if (currentSteps >= 20 && primeraInstruccionPerdido36 && !segundaInstruccionPerdidio36) {
             cont++
             instrucciones.text = "Ha llegado a su destino"
+            textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
             segundaInstruccionPerdidio36 = true
             imagen.setImageResource(R.drawable.tick)
         }
@@ -261,7 +272,9 @@ class clasesActivity : AppCompatActivity(), SensorEventListener {
 
     private fun estaPerdido(){
         instrucciones.text = "Si se ha perdido busque un código QR y le indicaremos la ruta desde allí"
+        textToSpeechEngine?.speak(instrucciones.text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
         imagen.setImageResource(R.drawable.qr)
+        perdido1 = true
     }
 
     private fun activarQR(){
