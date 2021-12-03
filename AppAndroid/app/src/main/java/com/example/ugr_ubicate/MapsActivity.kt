@@ -950,11 +950,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, RecognitionListene
     override fun onResults(results: Bundle?) {
         Log.i(logTag, "onResults")
         val matches = results!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        var text = matches?.get(0)
+        var text = matches?.get(0)?.toLowerCase()
 
-        //returnedText.text = text
-        // placeNameList = arrayOf<String>("Banco", "Hospital", "Bar", "Edificios Universidad")
-        var index_place = placeNameList.indexOf(text)
+        var sitios = arrayOf<String>("banco", "hospital", "bar", "edificios universidad")
+        var index_place = sitios.indexOf(text)
         if (index_place != -1){
             currentPlace = index_place
             fetchMarcadores().start()
