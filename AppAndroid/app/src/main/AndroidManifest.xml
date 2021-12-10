@@ -63,7 +63,12 @@
             android:name=".TimeTableActivity"
             android:exported="true"
             android:label="TimeTableActivity"
-            />
+        />
+        <activity
+            android:name=".BotActivity"
+            android:exported="true"
+            android:label="Chatea con Buddy"
+        />
     </application>
 
 </manifest>

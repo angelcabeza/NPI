@@ -29,11 +29,26 @@
         android:alpha="25"
         android:text="Buscar Sitios"
         android:translationX="270px"
-        android:translationY="300px"
+        android:translationY="200px"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@+id/irClases"
         app:layout_constraintStart_toStartOf="@+id/irClases"
         app:layout_constraintTop_toBottomOf="@+id/irClases"
+        tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/ChatBot"
+        android:layout_width="191dp"
+        android:layout_height="66dp"
+        android:layout_marginTop="8dp"
+        android:alpha="25"
+        android:text="Chatea con Buddy"
+        android:translationX="270px"
+        android:translationY="300px"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@+id/irSitios"
+        app:layout_constraintStart_toStartOf="@+id/irSitios"
+        app:layout_constraintTop_toBottomOf="@+id/irSitios"
         tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

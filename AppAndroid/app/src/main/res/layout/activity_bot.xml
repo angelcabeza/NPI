@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/contenedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        android:gravity="bottom"
+        android:paddingBottom="9dp"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp">
+
+
+        <EditText
+            android:id="@+id/cajadetexto"
+            android:layout_width="294dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="14dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginRight="0dp"
+            android:layout_toLeftOf="@id/microfono"
+            android:background="@drawable/cajatxt"
+            android:hint="@string/placeholder"
+            android:imeOptions="actionSend"
+            android:inputType="text"
+            android:padding="10dp"
+            android:textColor="#000000"
+            android:textSize="15sp" />
+
+        <ImageView
+            android:id="@+id/enviar"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginEnd="21dp"
+            android:layout_marginRight="21dp"
+            android:paddingTop="4dp"
+            android:paddingRight="4dp"
+            android:paddingBottom="4dp"
+            android:scaleType="centerInside"
+            app:srcCompat="@android:drawable/ic_menu_send"
+            app:tint="#9C27B0" />
+
+        <ImageView
+            android:id="@+id/microfono"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginRight="6dp"
+            android:layout_toLeftOf="@+id/enviar"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/ic_mic"
+            app:tint="#9C27B0" />
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:id="@+id/scroll_chat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/contenedor">
+
+        <LinearLayout
+            android:id="@+id/linear_chat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

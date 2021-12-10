@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-android-extensions'
 }
 
 android {
@@ -11,7 +12,7 @@ android {
         minSdk 28
         targetSdk 28
         versionCode 1
-        versionName "1.0"
+        versionName "2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -22,6 +23,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -32,6 +34,16 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    packagingOptions {
+        exclude 'META-INF/*'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE' // will not include NOTICE file
+        exclude 'META-INF/LICENSE' // will not include LICENSE file
+        exclude 'META-INF/INDEX.LIST' // will not include INDEX.LIST file
+
+    }
+
 }
 
 dependencies {
@@ -50,11 +62,27 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.budiyev.android:code-scanner:2.1.0'
-    implementation files('..\\lib\\json-20210307.jar')
-    implementation files('./lib/javax.ws.rs-api-2.1.1')
-    implementation files('..\\lib\\javax.ws.rs-api-2.1.1.jar')
+    implementation files('../lib/json-20210307.jar')
+    implementation files('../lib/javax.ws.rs-api-2.1.1.jar')
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
+    // SDK Dialogflow
+    implementation 'ai.api:sdk:2.0.7@aar'
+    implementation 'ai.api:libai:1.6.12'
+
+    // Google Cloud Dialogflow API
+    implementation 'com.google.cloud:google-cloud-dialogflow:3.1.0'
+
+    // Implementación de Java gRPC
+    implementation 'io.grpc:grpc-okhttp:1.38.0'
+
+}
+
+android {
+    configurations {
+        implementation.exclude group: 'com.google.firebase', module: 'protolite-well-known-types'
+        implementation.exclude group: 'com.google.protobuf', module: 'protobuf-javalite'
+    }
 }

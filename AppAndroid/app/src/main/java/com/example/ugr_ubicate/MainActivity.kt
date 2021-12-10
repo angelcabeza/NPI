@@ -43,6 +43,12 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        val buttonbOT = findViewById<Button>(R.id.ChatBot)
+        buttonbOT.setOnClickListener{
+            val intent = Intent(this, BotActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
