@@ -1,0 +1,75 @@
+{
+  "responseId": "23041a56-5e0b-4bb9-8a5c-7eb3f77da8ec-e9fa6883",
+  "queryResult": {
+    "queryText": "MENU",
+    "parameters": {
+      "menu": "menú"
+    },
+    "allRequiredParamsPresent": true,
+    "fulfillmentMessages": [
+      {
+        "payload": {
+          "accessory": {
+            "type": "button",
+            "value": "First",
+            "text": {
+              "text": "Vote",
+              "emoji": true,
+              "type": "plain_text"
+            }
+          }
+        }
+      },
+      {
+        "card": {
+          "title": "La Posada",
+          "subtitle": "C. Periodista Eugenio Selles, 10, 18014 Granada",
+          "buttons": [
+            {
+              "text": "SELECCIONAR",
+              "postback": "https://www.instagram.com/laposada_granada/"
+            }
+          ]
+        },
+        "platform": "SLACK"
+      },
+      {
+        "card": {
+          "title": "Los Toscares",
+          "subtitle": "C. Periodista Eugenio Selles, 12, 18014 Granada",
+          "buttons": [
+            {
+              "text": "SELECCIONAR",
+              "postback": "https://lostoscares.es/"
+            }
+          ]
+        },
+        "platform": "SLACK"
+      }
+    ],
+    "outputContexts": [
+      {
+        "name": "projects/ugr-buddy-fjws/agent/sessions/d24f71ed-2e18-4ebb-f9fa-5471e7f463c0/contexts/system_counters",
+        "lifespanCount": 1,
+        "parameters": {
+          "menu": "menú",
+          "no-input": 0,
+          "no-match": 0,
+          "menu.original": "MENU"
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/ugr-buddy-fjws/agent/intents/49dd0caf-35ac-452a-80e2-0afa6e07641f",
+      "displayName": "UGR.menu"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "es",
+    "sentimentAnalysisResult": {
+      "queryTextSentiment": {
+        "score": 0.1,
+        "magnitude": 0.1
+      }
+    }
+  }
+}

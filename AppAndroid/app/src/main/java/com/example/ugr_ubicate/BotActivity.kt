@@ -18,9 +18,12 @@ import android.widget.*
 import android.widget.Toast
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.nfc.cardemulation.CardEmulation
 import android.speech.RecognizerResultsIntent
 import android.speech.tts.TextToSpeech
 import android.text.Editable
+import androidx.cardview.widget.CardView
+import com.google.cloud.dialogflow.v2.Intent.Message.Card
 
 
 const val USUARIO = 0
@@ -242,11 +245,18 @@ class BotActivity : AppCompatActivity() {
                 // fulfillmentMessagesList (Objeto) retorna una lista de objetos
                 var respuestaBot: String = ""
 
-                val rnds = (0..response.queryResult.fulfillmentMessagesList[0].text.textList.size-1).random()
+
+
+
                 if(response.queryResult.fulfillmentText==" ")
-                    respuestaBot = response.queryResult.fulfillmentMessagesList[0].text.textList[rnds].toString()
-                else
-                    respuestaBot = response.queryResult.fulfillmentText
+                    for (i in response.queryResult.fulfillmentMessagesList)
+                        respuestaBot = response.queryResult.fulfillmentMessagesList[0].text.textList[0].toString()
+                else{
+                    for (r in response.queryResult.fulfillmentMessagesList) {
+                        var rnds = (0..r.text.textList.size-1).random()
+                        respuestaBot = respuestaBot + r.text.textList[rnds].toString() + "\n"
+                    }
+                }
 
                 // Pasamos el método agregarTexto()
                 agregarTexto(respuestaBot, BOT)
