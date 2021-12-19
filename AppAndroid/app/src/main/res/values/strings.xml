@@ -21,4 +21,7 @@
     <string name="mensajedevoznoadmitido"> Tu teléfono no es compatible con la función de micrófono. </string>
     <string name="audio_no_se_entiende"> No puedo entender lo que dijiste, dilo de nuevo. </string>
     <string name="ingresa_mensaje"> Por Favor, ingresa un mensaje. </string>
+    <string name="voz">VOZ ASISTENTE</string>
+    <string name="no">No</string>
+    <string name="si">Si</string>
 </resources>

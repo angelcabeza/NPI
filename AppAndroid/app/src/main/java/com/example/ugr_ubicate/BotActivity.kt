@@ -41,6 +41,7 @@ class BotActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bot)
 
+
         // Llamo al ScrollView
         val scrollview = findViewById<ScrollView>(R.id.scroll_chat)
         scrollview.post {
@@ -77,7 +78,8 @@ class BotActivity : AppCompatActivity() {
         iniciarAsistente()
 
         // Llamamos al método iniciarAsistenteVoz()
-        //iniciarAsistenteVoz()
+        iniciarAsistenteVoz()
+
     }
 
     // Función inicarAsistente
@@ -219,7 +221,7 @@ class BotActivity : AppCompatActivity() {
 
         // Si es un cliente el que envía un mensaje al Bot, cargamos el método 'TexToSpeech'
         // 'TexToSpeech' junto a otras métodos procesa los mensajes de voz que seran enviados al Bot
-        if(type!= USUARIO) asistente_voz?.speak(mensaje,TextToSpeech.QUEUE_FLUSH,null)
+        if(type!= USUARIO && voz.isChecked) asistente_voz?.speak(mensaje,TextToSpeech.QUEUE_FLUSH,null)
 
     }
 
@@ -252,9 +254,17 @@ class BotActivity : AppCompatActivity() {
                     for (i in response.queryResult.fulfillmentMessagesList)
                         respuestaBot = response.queryResult.fulfillmentMessagesList[0].text.textList[0].toString()
                 else{
+                    var contador = 0
                     for (r in response.queryResult.fulfillmentMessagesList) {
-                        var rnds = (0..r.text.textList.size-1).random()
-                        respuestaBot = respuestaBot + r.text.textList[rnds].toString() + "\n"
+                        contador+=1
+                        if(contador == response.queryResult.fulfillmentMessagesList.size){
+                            var rnds = (0..r.text.textList.size-1).random()
+                            respuestaBot = respuestaBot + r.text.textList[rnds].toString()
+                        }else{
+                            var rnds = (0..r.text.textList.size-1).random()
+                            respuestaBot = respuestaBot + r.text.textList[rnds].toString() + "\n"
+                        }
+
                     }
                 }
 
