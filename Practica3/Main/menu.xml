@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1" xml:lang="es-ES">
+
+	<var name="dia"/>
+	<var name="vegi"/>
+	<var name="alergi"/>
+	
+	<var name="primerplato" asign="undefined"/>
+	<var name="segundoplato" asign="undefined"/>
+	<var name="postre" asign="undefined"/>
+	<var name="bebida" asign="undefined"/>
+	
+	<form id="UGRBUDDY">
+		<field name="DiaSemana">
+			<prompt bargein="true">
+				Buenos dias, bienvenido a UGR Buddy. Que día quieres venir a comer?
+			</prompt>
+			<grammar src="dias.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="DiaSemana">
+			<assign name="dia" expr="DiaSemana"/>
+		</filled>
+
+		<field name="Vegetariano">
+			<prompt bargein="true">
+				Muy bien, usted ha pedido el menu para el <value expr="dia"/>, Quiere conocer la opción vegetariana?
+			</prompt>
+			<grammar src="vegetariano.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="Vegetariano">
+			<assign name="vegi" expr="Vegetariano"/>
+		</filled>
+
+		<field name="Alergias">
+			<prompt bargein="true">
+				Eres alergico al huevo, gluten o lactosa?
+			</prompt>
+			<grammar src="alergias.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="Alergias">
+			<assign name="alergi" expr="Alergias"/>
+		</filled>
+
+		<filled mode="all" namelist="DiaSemana Vegetariano Alergias">
+			<if cond="Vegetariano == 'no'">
+				<if cond="Alergias == 'no'">
+					<prompt bargein="true">
+						Para el día <value expr="DiaSemana"/> el menu no vegetariano y sin alergias es el siguiente: Primer plato: Cocido o Lasaña, Segundo plato: Plato Alpujarreño y Merluza a la plancha y postre: Flan y Natillas. 
+					</prompt>
+				<else/>
+					<prompt bargein="true">
+						Para el día <value expr="DiaSemana"/> el menu no vegetariano y teniendo alergias es el siguiente: Primer plato: pan de pimenton o trenza de masa fermentada, Segundo plato: Paella (sin gluten) y berenjenas rellenas de carne y postre: Naranja y Platano.
+					</prompt>
+				</if>
+			<else/>
+				<if cond="Alergias == 'no'">
+					<prompt bargein="true">
+						Para el día <value expr="DiaSemana"/> el menu vegetariano y sin alergias es el siguiente: Primer plato: Gazpacho y Salmorejo Segundo plato: Albondigas de tofu y Sandwich vegetal y postre: Manzana y Mandarina.
+					</prompt>
+				<else/>
+					<prompt bargein="true">
+						Para el día <value expr="DiaSemana"/> el menu vegetariano y con alergias es el siguiente: Primer plato: Crema de calabaza (sin leche) y Sopa de cebolla Segundo plato: ensalada de lentejas y quinoa y guacamole y Postre: Chirimoya y Pera.
+					</prompt>
+				</if>
+			</if>
+			<goto next="#FINMENU"/>
+		</filled>
+	</form>
+	
+	<form id="FINMENU">
+		<field name="MenuCorrecto">
+			<prompt>
+				Esta todo correcto con la reserva?
+			</prompt>
+			<grammar src="sino.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="MenuCorrecto">
+			<if cond="MenuCorrecto == 'si'">
+				<prompt>
+					Perfecto, 
+				</prompt>
+				<goto next="#RESERVA">
+			<else/>
+				<prompt>
+					Vaya, puede volver a repetir?
+				</prompt>
+				<goto next="#UGRBUDDY"/>
+			</if>
+		</filled>
+	</form>
+
+	<form id="RESERVA">
+		<field name="Reserva">
+		   	<prompt bargein="true">
+		   		Desea hacer una reserva?
+		   	</prompt>
+		   	<grammar src="sino.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="Reserva">
+			<if cond="Reserva == 'si'">
+				<prompt bargein="true">
+					Muy bien, necesito más información para apuntar su reserva
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			<else/>
+				<prompt bargein="true">
+					Muy bien, gracias por llamar
+				</prompt>
+				<disconnect/>
+			</if>
+		</filled>
+	</form>
+
+	<form id="CONFIRMARESERVA">
+		<field name="Turno">
+			<prompt>
+				Desea reservar para el turno de la 1 o para el de las 3 del <value expr="dia"/>?
+			</prompt>
+			<grammar src="turno.jsgf"/>
+		</field>
+
+		<field name="PrimerPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Quiere coger Cocido o Lasaña?
+			</prompt>
+			<grammar src="primerplato.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato1">
+			<assign name="primerplato" expr="PrimerPlato1"/>
+		</filled>
+
+		<field name="PrimerPlato2" cond="(vegi == 'si') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere el pan de pimenton o la trenza de masa fermentada?
+			</prompt>
+			<grammar src="primerplato_v.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato2">
+			<assign name="primerplato" expr="PrimerPlato2"/>
+		</filled>
+
+		<field name="PrimerPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				
+			</prompt>
+			<grammar src="primerplato_a.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato3">
+			<assign name="primerplato" expr="PrimerPlato3"/>
+		</filled>
+
+		<field name="PrimerPlato4" cond="(vegi == 'si') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Quiere la crema de calabaza o la sopa de cebolla?
+			</prompt>
+			<grammar src="primerplato_va.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato4">
+			<assign name="primerplato" expr="PrimerPlato4"/>
+		</filled>
+
+		<field name="SegundoPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere el Plato Alpujarreño o la Merluza a la plancha?
+			</prompt>
+			<grammar src="segundoplato.jsgf"/>
+		</field>
+		<filled mode="all" namelist="SegundoPlato1">
+			<assign name="segundoplato" expr="SegundoPlato1"/>
+		</filled>
+
+		<field name="SegundoPlato2" cond="(vegi == 'si') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere la Paella sin gluten o la berenjena rellena?
+			</prompt>
+			<grammar src="segundoplato_v.jsgf"/>
+		</field>
+		<filled mode="all" namelist="SegundoPlato2">
+			<assign name="segundoplato" expr="SegundoPlato2"/>
+		</filled>
+
+		<field name="SegundoPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere las Albondigas de tofu o el Sandwich vegetal?
+			</prompt>
+			<grammar src="segundoplato_a.jsgf"/>
+		</field>
+		<filled mode="all" namelist="SegundoPlato3">
+			<assign name="segundoplato" expr="SegundoPlato3"/>
+		</filled>
+
+		<field name="SegundoPlato4" cond="(vegi == 'si') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere la ensalada de lentejas y quinoa o el guacamole?
+			</prompt>
+			<grammar src="segundoplato_va.jsgf"/>
+		</field>
+		<filled mode="all" namelist="SegundoPlato4">
+			<assign name="segundoplato" expr="SegundoPlato4"/>
+		</filled>
+
+
+		<field name="Postre1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Para el postre quiere Flan o Natillas?
+			</prompt>
+			<grammar src="postre.jsgf"/>
+		</field>
+		<filled mode="all" namelist="Postre1">
+			<assign name="postre" expr="Postre1"/>
+		</filled>
+
+		<field name="Postre2" cond="(vegi == 'si') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Para el postre quiere Naranja o Platano?
+			</prompt>
+			<grammar src="postre_v.jsgf"/>
+		</field>
+		<filled mode="all" namelist="Postre2">
+			<assign name="postre" expr="Postre2"/>
+		</filled>
+
+		<field name="Postre3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Para el postre quiere Manzana o Mandarina?
+			</prompt>
+			<grammar src="postre_a.jsgf"/>
+		</field>
+		<filled mode="all" namelist="Postre3">
+			<assign name="postre" expr="Postre3"/>
+		</filled>
+
+		<field name="Postre4" cond="(vegi == 'si') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Para el postre quiere Chirimoya o Pera?
+			</prompt>
+			<grammar src="postre_va.jsgf"/>
+		</field>
+		<filled mode="all" namelist="Postre4">
+			<assign name="postre" expr="Postre4"/>
+		</filled>
+
+		<field name="Bebida">
+			<prompt>
+				De bebida puede elegir entre Agua, Coca-Cola, Vino y Zumo, que prefiere?
+			</prompt>
+			<grammar src="bebida.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="Turno Bebida">
+			<prompt>
+				Muy bien, usted ha pedido para el turno de
+			</prompt>
+			<if cond="Turno == 'una'">
+				<prompt>
+					la una
+				</prompt>
+			<else/>
+				<prompt>
+					las tres
+				</prompt>
+			</if>
+			<prompt>
+				<value expr="primerplato"/>, <value expr="segundoplato"/>, <value expr="postre"/> y <value expr="Bebida"/> de bebida
+			</prompt>
+			<goto next="#FINRESERVA"/>
+		</filled>
+		
+	</form>
+	
+	<form id="FINRESERVA">
+		<field name="TodoCorrecto">
+			<prompt>
+				Esta todo correcto con la reserva?
+			</prompt>
+			<grammar src="sino.jsgf"/>
+		</field>
+
+		<filled mode="all" namelist="TodoCorrecto">
+			<if cond="TodoCorrecto == 'si'">
+				<prompt>
+					Muy bien, gracias por llamar
+				</prompt>
+			<else/>
+				<prompt>
+					Vaya, puede volver a repetir?
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			</if>
+		</filled>
+	</form>
+
+
+</vxml>
+
+

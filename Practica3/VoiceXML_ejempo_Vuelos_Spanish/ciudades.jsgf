@@ -1,0 +1,6 @@
+#JSGF V1.0;
+
+grammar ciudades;
+
+
+public <ciudades> = londres | paris | madrid | barcelona | granada | nueva york | bruselas;

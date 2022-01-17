@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar segundoplato_a;
+
+public <segundoplato_a> = albondigas | sandwich;

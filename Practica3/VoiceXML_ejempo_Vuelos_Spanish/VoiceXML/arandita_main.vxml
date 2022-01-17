@@ -1,0 +1,58 @@
+<vxml version="2.1" xml:lang="es-ES">
+
+<!-- La primera sección en ejecutarse es el menú principal  -->
+<link next="\MainMenu">
+</link>
+
+<!--
+	Menú principal
+	Se encarga de dar la bienvenida al sistema al usuario
+	Presenta las diferentes opciones sobre las que puede proporcionar información
+	y ejecuta la transición a los documentos correspondientes
+	Si la opción elegida es salir, salta al formulario de salida
+-->
+<form id="MainMenu">
+	<block>
+		<prompt bargein="false">
+			Hola. Me llamo Arandita y soy el asistente conversacional de la UGR.
+		</prompt>
+		<goto next="#EscogerSeccion"/>
+	</block>
+</form>
+
+<menu id="EscogerSeccion">
+		<prompt bargein="false">
+			Dime una de las siguientes opciones para que te de informacion:
+		</prompt>
+		<choice next="bibliotecas.vxml">
+			Bibliotecas
+		</choice>
+		<choice next="grados.vxml">
+			Grados
+		</choice>
+		<choice next="comedores.vxml">
+			Comedores
+		</choice>
+		<choice next="centros.vxml">
+			Centros
+		</choice>
+		<choice next="#quieroSalir">
+			Quiero salir
+		</choice>
+		<enumerate/>
+
+</menu>
+<!--
+	Formulario de salida
+	Se despide del usuario y cierra la conexión
+-->
+<form id="quieroSalir">
+	<block>
+		<prompt bargein="false">
+			Hasta luego! Un placer ayudarte
+		</prompt>
+		<disconnect/>
+	</block>
+</form>
+
+</vxml>

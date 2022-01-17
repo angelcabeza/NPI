@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar segundoplato_va;
+
+public <segundoplato_va> = ensalada | guacamole;

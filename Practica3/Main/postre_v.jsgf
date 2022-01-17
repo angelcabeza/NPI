@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar postre_v;
+
+public <postre_v> = naranja | platano;

@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar vegetariano;
+
+public <vegetariano> = si | no | vegetariano;

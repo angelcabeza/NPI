@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar segundoplato_v;
+
+public <segundoplato_v> = paella | berenjena;

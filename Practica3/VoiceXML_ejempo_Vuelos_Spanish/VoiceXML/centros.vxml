@@ -1,0 +1,161 @@
+<vxml version="2.1" xml:lang="es-ES" application="arandita_main.vxml">
+
+<!-- La primera sección que debe ejecutarse es centrosMenu -->
+<link next="\centrosMenu">
+</link>
+
+<!--Variable auxiliar necesaria para almacenar el tipo de información que se ha preguntado -->
+<var name="tipo_informacion"/>
+
+<!-- Evento que proporciona información sobre la etsiit -->
+<catch event="event.etsiit">
+	<prompt bargein="false">
+		Has preguntado por la ETSIIT
+	</prompt>
+	<if cond="tipo_informacion == 'direccion'">
+		<prompt>
+			La direccion de la ETSIIT es Calle Periodista Daniel Saucedo Aranda, s/n, 18014 Granada
+		</prompt>
+	<elseif cond="tipo_informacion == 'telefono'"/>
+		<prompt>
+			El telefono de la ETSIIT es 9 5 8 2 4 2 8 0 2
+		</prompt>
+	<elseif cond="tipo_informacion == 'delegacion'"/>
+		<prompt>
+			La delegacion de la ETSIIT es la DEIIT
+		</prompt>
+	</if>
+
+	<goto next="#preguntarOtraCosa"/>
+
+</catch>
+
+<!-- Evento que proporciona información sobre la facultad de ciencias -->
+<catch event="event.ciencias">
+	<prompt bargein="false">
+		Has preguntado por la Facultad de Ciencias
+	</prompt>
+	<if cond="tipo_informacion == 'direccion'">
+		<prompt>
+			La direccion de la Facultad de ciencias es Avenida de Fuente Nueva, s/n, 18071 Granada
+		</prompt>
+	<elseif cond="tipo_informacion == 'telefono'"/>
+		<prompt>
+			El telefono de la Facultad de ciencias es 9 5 8 2 4 3 3 8 0
+		</prompt>
+	<elseif cond="tipo_informacion == 'delegacion'"/>
+		<prompt>
+			La delegacion de la Facultad de ciencias es la DEFC
+		</prompt>
+	</if>
+
+	<goto next="#preguntarOtraCosa"/>
+
+</catch>
+
+<!-- Evento que proporciona información sobre la facultad de bellas artes -->
+<catch event="event.bellas">
+	<prompt bargein="false">
+		Has preguntado por la Facultad de Bellas Artes
+	</prompt>
+	<if cond="tipo_informacion == 'direccion'">
+		<prompt>
+			La direccion de la Facultad de bellas artes es Calle Periodista Eugenio Selles, s/n, 18014 Granada
+		</prompt>
+	<elseif cond="tipo_informacion == 'telefono'"/>
+		<prompt>
+			El telefono de la Facultad de bellas artes 9 5 8 2 4 3 8 1 9
+		</prompt>
+	<elseif cond="tipo_informacion == 'delegacion'"/>
+		<prompt>
+			La delegacion de la Facultad de bellas artes es la DEBBAA
+		</prompt>
+	</if>
+
+	<goto next="#preguntarOtraCosa"/>
+
+</catch>
+
+<!--
+	Menu de selección de centros.
+	El sistema pregunta por el centro en el que el usuario esta interesado y la información que necesita obtener
+	Si el usuario responde salir, el sistema vuelve al menu principal
+	Si el sistema no entiende al usuario con una confianza superior al 60%, lo avisa y vuelve a preguntar
+	Dependiendo del centro y la información solicitada, se actualiza la variable auxiliar tipo_informacion y
+	se lanza el evento correspondiente
+-->
+<form id="centrosMenu">
+	<field name="centro">
+		<prompt>
+			De que centro necesitas informacion?
+		</prompt>
+		<catch event="nomatch noinput">
+			Puedo proporcionarte información de la escuela de informatica, la facultad de ciencias y la facultad de Bellas Artes. Tambien puedes decirme <emp>salir</emp> para volver al menu principal.
+			<reprompt/>
+		</catch>
+		<grammar src="centros.jsgf"/>
+		<filled>
+			<if cond="centro == 'salir'">
+				<goto next="arandita_main.vxml#EscogerSeccion"/>
+			<elseif cond="0.6 > centro$.confidence"/>
+				Perdona, no te he entendido bien, me has preguntado por la <value expr="centro"/>?
+				<clear namelist="centro"/>
+			</if>
+		</filled>
+	</field>
+
+	<field name="informacion">
+		<prompt>
+			Que necesitas saber?
+		</prompt>
+		<catch event="nomatch noinput">
+			Puedes preguntarme sobre su dirección, su telefono y su delegación de centro
+			<reprompt/>
+		</catch>
+		<grammar src="info_centros.jsgf"/>
+		<filled>
+			<if cond="0.6 > informacion$.confidence">
+				Perdona, no te he entendido, me has preguntado sobre la <value expr="informacion"/> de la <value expr="centro"/>?
+				<clear namelist="informacion"/>
+			</if>
+		</filled>
+	</field>
+
+	<filled mode="all" namelist="centro informacion">
+		<assign name="tipo_informacion" expr="informacion"/>
+		<clear namelist="confirmacion_centro confirmacion_info"/>
+		<if cond="centro == 'escuela de informatica'">
+			<throw event="event.etsiit"/>
+		<elseif cond="centro == 'facultad de ciencias'"/>
+			<throw event="event.ciencias"/>
+		<elseif cond="centro == 'facultad de bellas artes'"/>
+			<throw event="event.bellas"/>
+		</if>
+	</filled>
+</form>
+
+<!--
+	Este formulario se ejecuta siempre que ya se ha devuelto alguna información
+	Si se requiere más información se vuelve al menú de selección y si no se pasa
+	al menú principal
+-->
+<form id="preguntarOtraCosa">
+	<field name="repetir">
+		<prompt>
+			Necesitas mas informacion?
+		</prompt>
+		<grammar src="yesno.jsgf"/>
+		<catch event="nomatch noinput">
+			No te he entendido, responde si o no.
+		</catch>
+	</field>
+	<filled>
+		<if cond="repetir == 'si'">
+			<goto next="#centrosMenu"/>
+		<else/>
+			<goto next="arandita_main.vxml#EscogerSeccion"/>
+		</if>
+	</filled>
+</form>
+
+</vxml>

@@ -1,0 +1,3 @@
+IMPT
+
+En los los ficheros de las gramáticas no se pueden usar tildes.

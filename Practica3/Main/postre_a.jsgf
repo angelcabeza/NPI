@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar postre_a;
+
+public <postre_a> = manzana | mandarina;
