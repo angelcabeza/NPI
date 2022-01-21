@@ -83,7 +83,7 @@
 				<prompt>
 					Perfecto, 
 				</prompt>
-				<goto next="#RESERVA">
+				<goto next="#RESERVA"/>
 			<else/>
 				<prompt>
 					Vaya, puede volver a repetir?
