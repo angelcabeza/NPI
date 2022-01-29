@@ -1,0 +1,8 @@
+#JSGF V1.0;
+
+grammar primerplato_a;
+
+public <primerplato_a> = [<deseo>] [<comida> {this.PrimerPlato3=$comida}];
+
+<deseo> = I want | I would like | I need | I wanted;
+<comida> = gazpacho | salmorejo;

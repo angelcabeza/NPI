@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar gramatica_error;
+
+public <gramatica_error> = error | ha habido un error | me he equivocado | [quiero] repetir | confusion | incorrecto | [esta] mal;

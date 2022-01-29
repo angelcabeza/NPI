@@ -1,0 +1,9 @@
+#JSGF V1.0;
+
+grammar segundoplato_v;
+
+public <segundoplato_v> = [<deseo>] [<comida> {this.SegundoPlato2=$comida}];
+
+<deseo> = quiero | me gustaria | [yo] necesito | [yo] queria;
+
+<comida> = albondigas [de tofu] | sandwich [vegetal];

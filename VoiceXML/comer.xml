@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<vxml version="2.1" xml:lang="es-ES" application="menu.xml">
+	
+
+    <!-- Cargamos las gramaticas de error y de ayuda -->
+	<link event="help">
+
+		<grammar src="grammar_spanish/gramatica_ayuda.jsgf"/>
+
+	</link>
+
+
+
+    <link event="error">
+
+        <grammar src="grammar_spanish/gramatica_error.jsgf"/>
+
+    </link>
+	
+
+	
+
+	<link next="\UGRBUDDY">
+
+	</link>
+
+
+
+	<script src="http://webhosting.voxeo.net/207932/www/comprobar_vacaciones.js" />
+
+
+
+	<form id="UGRBUDDY">
+
+        <!-- Informamos del idioma seleccionado -->
+		<block>
+
+			<prompt bargein="false">
+
+				Has seleccionado la opción: Español.
+
+			</prompt>
+
+			<goto nextitem="DiaSemana"/>
+
+		</block>
+
+
+
+		<field name="DiaSemana">
+
+            <!-- Si estamos de vacaciones informamos al usuario y salimos -->
+			<var name="esVacaciones" expr="isHolydays();"/>
+
+
+
+			<if cond="esVacaciones != ''">
+
+				<prompt bargein="false"> <value expr="esVacaciones"/> </prompt>
+
+				<disconnect/>
+
+			</if>
+
+
+            <!-- Si no le preguntamos al usuario que día quiere venir a comer-->
+			<prompt bargein="true">
+
+				¿Qué día quieres venir a comer?
+
+			</prompt>
+
+			<grammar src="grammar_spanish/dias.jsgf"/>
+
+
+            <!-- Evento de pedir ayuda -->
+			<help>
+
+				En UGR Buddy te podemos decir el menú del comedor y podrás reservar si lo deseas.
+
+				<reprompt/>
+
+			</help>
+
+
+            <!-- Evento de error -->
+			<error>
+
+				Parece que ha habido un error, disculpa las molestias.
+
+				<reprompt/>
+
+			</error>
+
+
+            <!-- Si el usuario dice sabado o domingo informamos de que el comedor esta cerrado-->
+			<filled>
+
+				<if cond="DiaSemana == 'sabado'">
+
+					<prompt bargein="false">Lo siento, el sábado esta <emp>cerrado</emp>.</prompt>
+
+					<clear namelist="DiaSemana"/>
+
+				</if>
+
+				<if cond="DiaSemana == 'domingo'">
+
+					<prompt bargein="false">Lo siento, el domingo esta <emp>cerrado</emp>.</prompt>
+
+					<clear namelist="DiaSemana"/>
+
+				</if>
+
+			</filled>
+
+		</field>
+
+
+        <!-- Utilizamos valores de confianza para el día, si no entendemos el día con más de un 60% de confianza
+            le preguntamos al usuario para confirmar que ha dicho el día que hemos entendido
+        -->
+		<field name="confirmacion_dia" type="boolean" cond="0.6 > DiaSemana$.confidence">
+
+			<prompt bargein="false">
+
+				Perdona, no te he entendido bien, me has dicho el dia <value expr="DiaSemana"/>?
+
+			</prompt>
+
+            <!-- Evento para cuando no entendamos la respuesta-->
+			<catch event="nomatch noinput"> No te he entendido bien, por favor responde si o no. </catch>
+
+            <!-- Si no entendemos la respuesta del usuario 3 veces, volvemos a empezar todo el módulo-->
+			<nomatch count="3">
+
+				<prompt bargein="false">
+
+					Lo siento mucho, pero no entiendo lo que dices, volvamos a empezar.
+
+				</prompt>
+
+				<clear namelist="DiaSemana confirmacion_dia"/>
+
+			</nomatch>
+
+            <!-- Evento de error -->
+            <error>
+
+                Parece que ha habido un error. Disculpa las molestias
+
+                <clear namelist="DiaSemana confirmacion_dia"/>
+
+            </error>
+
+
+            <!-- Si nos responde que NO ha dicho el día que hemos entendido se lo volvemos a preguntar-->
+			<filled>
+
+				<if cond="!confirmacion_dia">
+
+					<clear namelist="DiaSemana confirmacion_dia"/>
+
+				</if>
+
+			</filled>
+
+
+
+		</field>
+
+
+        <!-- Asignamos el día a la variable global declarada en menu.xml-->
+		<filled mode="all" namelist="DiaSemana">
+
+			<assign name="dia" expr="DiaSemana"/>
+
+		</filled>
+
+
+        <!-- Preguntamos por la opción vegetariana-->
+		<field name="Vegetariano">
+
+			<prompt bargein="true">
+
+				Muy bien, has seleccionado el menú para el <value expr="dia"/>. ¿Quieres conocer la opción vegetariana?
+
+			</prompt>
+
+			<grammar src="grammar_spanish/vegetariano.jsgf"/>
+
+            <!-- Evento de ayuda -->
+			<help>
+
+				Tiene que contestar si o no.
+
+				<reprompt/>
+
+			</help>
+
+
+            <!-- Evento de error, vuelve a preguntar por el día-->
+            <error>
+
+                Parece que ha habido un error o te has equivocado. Por favor, repite tu respuesta y disculpa las molestias.
+
+
+                <clear namelist="DiaSemana"/>
+
+                <goto nextitem="DiaSemana"/>
+
+            </error>
+
+
+
+		</field>
+
+
+        <!-- Asignamos el valor introducido por el usuario a la variable global vegi 
+            definida en menu.xml
+        -->
+		<filled mode="all" namelist="Vegetariano">
+
+			<assign name="vegi" expr="Vegetariano"/>
+
+		</filled>
+
+
+        <!-- Preguntamos por las alergias-->
+		<field name="Alergias">
+
+			<prompt bargein="true">
+
+				¿Eres alérgico al huevo, gluten o lactosa?
+
+			</prompt>
+
+			<grammar src="grammar_spanish/alergias.jsgf"/>
+
+            <!-- Evento de ayuda -->
+			<help>
+
+				Responde si, no o el tipo de alergia.
+
+				<reprompt/>
+
+			</help>
+
+
+            <!-- Evento de error -->
+            <error>
+
+                Parece que ha habido un error o te has equivocado. Por favor, repite tu respuesta y disculpa las molestias.
+
+                <clear namelist="Vegetariano"/>
+
+                <goto nextitem="Vegetariano"/>
+
+            </error>
+
+
+
+		</field>
+
+
+        <!-- Asignamos el valor introducido por el usuario a la variable global alergi 
+            definida en menu.xml
+        -->
+		<filled mode="all" namelist="Alergias">
+
+			<assign name="alergi" expr="Alergias"/>
+
+		</filled>
+
+		
+        <!-- Comprobamos que todo lo que ha introducido el usuario es correcto-->
+		<field name="DiaVegAlergiaCorrecto">
+
+			<prompt>
+
+				Bien, me has dicho que deseas conocer el menú del <value expr="DiaSemana"/>, que <value expr="vegi"/> te interesa la opción vegetariana y que <value expr="alergi"/> tienes alergias.
+
+				¿Es correcta esta información?
+
+			</prompt>
+
+			<grammar src="grammar_spanish/sino.jsgf"/>
+
+            <!-- Evento de error, asumimos que no es correcta la información y reiniciamos el módulo para captar nueva información -->
+            <error>
+
+                <prompt>
+			        Parece que ha habido un error o te has equivocado, volvamos a empezar. Disculpa las molestias.
+		        </prompt>
+
+				<clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+            </error>
+
+		</field>
+
+
+        <!-- Comprobamos haciendo uso de valores de confianza si está todo correcto, si no entendemos la respuesta 
+            del usuario con un valor de confianza mayor que el 0.6, le pedimos el usuario que nos confirme si lo que hemos
+            entendido es correcto o no
+        -->
+		<field name="confirmacion_DiaVegAlergiaCorrecto" type="boolean" cond="0.6 > DiaVegAlergiaCorrecto$.confidence">
+
+			<prompt bargein="false">
+
+				Perdona, no te he entendido bien, me has dicho <value expr="DiaVegAlergiaCorrecto"/>?
+
+			</prompt>
+
+            <!-- Evento para manejar si no entendemos la respuesta del usuario-->
+			<catch event="nomatch noinput"> No te he entendido, responde si o no. </catch>
+
+            <!-- Si el usuario dice error asumimos que la información que hemos almacenado es incorrecta
+                y reiniciamos el módulo para pedirle de nuevo la información
+            -->
+            <error>
+
+                Parece que ha habido un error. Disculpe las molestias.
+
+                <clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+            </error>
+
+            <!-- Si el usuario nos responde que lo que hemos entendido no es lo que ha dicho, le volvemos a preguntar
+                si la información recogida es correcta
+            -->
+			<filled>
+
+				<if cond="!confirmacion_DiaVegAlergiaCorrecto">
+
+					<clear namelist="DiaVegAlergiaCorrecto confirmacion_DiaVegAlergiaCorrecto"/>
+
+				</if>
+
+			</filled>
+
+		</field>
+
+		
+        <!-- Si el usuario nos dice que la información que hemos almacenado no es correcta reiniciamos el módulo
+            para volver a preguntar toda la información
+        -->
+		<filled mode="all" namelist="DiaVegAlergiaCorrecto">
+
+			<if cond="DiaVegAlergiaCorrecto == 'no'">
+
+				<prompt>
+
+					Vaya, ¿puedes volver a repetirlo entonces?
+
+				</prompt>
+
+				<clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+			</if>
+
+		</filled>
+
+
+        <!-- Si el usuario nos indica que la información recogida es correcta le informamos del menú según la información
+            proporcionada
+        -->
+		<filled mode="all" namelist="DiaSemana Vegetariano Alergias DiaVegAlergiaCorrecto">
+
+			<if cond="Vegetariano == 'no'">
+
+				<if cond="Alergias == 'no'">
+
+					<prompt bargein="false">
+
+						Para el día <value expr="DiaSemana"/> el menu no vegetariano y sin alergias es el siguiente: Primer plato: Cocido o Lasaña, Segundo plato: Plato Alpujarreño o Merluza a la plancha y de postre: Flan o Natillas. 
+
+					</prompt>
+
+				<else/>
+
+					<prompt bargein="false">
+
+						Para el día <value expr="DiaSemana"/> el menú no vegetariano y teniendo alergias es el siguiente: Primer plato: pan de pimentón o trenza de masa fermentada, Segundo plato: Paella (sin gluten) o berenjenas rellenas de carne, y de postre: Naranja o Plátano.
+
+					</prompt>
+
+				</if>
+
+			<else/>
+
+				<if cond="Alergias == 'no'">
+
+					<prompt bargein="false">
+
+						Para el día <value expr="DiaSemana"/> el menú vegetariano y sin alergias es el siguiente: Primer plato: Gazpacho o Salmorejo Segundo plato: Albondigas de tofu o Sandwich vegetal, y de postre: Manzana o Mandarina.
+
+					</prompt>
+
+				<else/>
+
+					<prompt bargein="false">
+
+						Para el día <value expr="DiaSemana"/> el menú vegetariano y con alergias es el siguiente: Primer plato: Crema de calabaza (sin leche) o Sopa de cebolla, Segundo plato: ensalada de lentejas o quinoa con guarnición de guacamole, y de postre: Chirimoya o Pera.
+
+					</prompt>
+
+				</if>
+
+			</if>
+
+            <!-- Finalmente nos movemos al fichero reserva. -->
+			<goto next="reservas.vxml#RESERVA"/>
+
+		</filled>
+
+	</form>
+
+</vxml>

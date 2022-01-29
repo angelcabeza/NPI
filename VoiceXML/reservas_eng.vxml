@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1" xml:lang="en-US" application="menu.xml">
+
+	<link event="help">
+
+		<grammar src="grammar_english/gramatica_ayuda.jsgf"/>
+
+	</link>
+
+
+
+    	<link event="error">
+
+       		<grammar src="grammar_english/gramatica_error.jsgf"/>
+
+    	</link>
+	
+	<form id="RESERVA">
+		<field name="Reserva">
+		   	<prompt bargein="false">
+		   		Do you want to make a reservation?
+		   	</prompt>	
+		   	<grammar src="grammar_english/sino.jsgf"/>
+			<help>
+                Answer yes or no if you want to reserve for the previous menu.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <reprompt/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Reserva">
+			<if cond="Reserva == 'yes'">
+				<prompt bargein="false">
+					Very good, I need more information to record your reservation.
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			<else/>
+				<prompt bargein="false">
+					All right, thanks for calling. Bye.
+				</prompt>
+				<exit/>
+			</if>
+		</filled>
+	</form>
+
+	<form id="CONFIRMARESERVA">
+		<field name="Turno">
+			<prompt>
+				You want to book for the 1 o'clock shift or the 3 o'clock shift<value expr="dia"/>?
+			</prompt>
+			<grammar src="grammar_english/turno.jsgf"/>
+			<help>
+                Answer the turn you want: one o'clock or three o'clock.
+                <reprompt/>
+            </help>
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="Reserva"/>
+                <goto next="#RESERVA"/>
+            </error>
+		</field>
+
+		<field name="PrimerPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Do you want to eat stew or Lasagna?
+			</prompt>
+			<grammar src="grammar_english/primerplato.jsgf"/>
+			<help>
+                Answer if you want stew or lasagna.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato1">
+			<assign name="primerplato" expr="PrimerPlato1"/>
+		</filled>
+
+		<field name="PrimerPlato2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Do you prefer paprika bread or sourdough braid?
+			</prompt>
+			<grammar src="grammar_english/primerplato_v.jsgf"/>
+
+			<help>
+                Answer if you want paprika bread or sourdough braid.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato2">
+			<assign name="primerplato" expr="PrimerPlato2"/>
+		</filled>
+
+		<field name="PrimerPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Do you prefer gazpacho or salmorejo?
+			</prompt>
+			<grammar src="grammar_english/primerplato_a.jsgf"/>
+			<help>
+                Answer if you want gazpacho or salmorejo.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato3">
+			<assign name="primerplato" expr="PrimerPlato3"/>
+		</filled>
+
+		<field name="PrimerPlato4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Do you prefer cream of pumpkin or onion soup?
+			</prompt>
+			<grammar src="grammar_english/primerplato_va.jsgf"/>
+			<help>
+                Answer if you want cream of pumpkin or onion soup.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato4">
+			<assign name="primerplato" expr="PrimerPlato4"/>
+		</filled>
+
+		<field name="SegundoPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Do you prefer the Alpujarreño dish or the grilled hake?
+			</prompt>
+			<grammar src="grammar_english/segundoplato.jsgf"/>
+			<help>
+                Answer if you want Alpujarreño Plate or Grilled Hake.
+                <reprompt/>
+            </help>
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="PrimerPlato1"/>
+                <goto nextitem="PrimerPlato1"/>
+            </error>
+		</field>
+		<filled mode="all" namelist="SegundoPlato1">
+			<assign name="segundoplato" expr="SegundoPlato1"/>
+		</filled>
+
+		<field name="SegundoPlato2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Do you prefer the Tofu Meatballs or the Vegetable Sandwich?
+			</prompt>
+			<grammar src="grammar_english/segundoplato_v.jsgf"/>
+			<help>
+                Answer if you want Tofu Meatballs or Vegetable Sandwich.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="PrimerPlato2"/>
+                <goto nextitem="PrimerPlato2"/>
+            </error>
+		</field>
+
+		<filled mode="all" namelist="SegundoPlato2">
+			<assign name="segundoplato" expr="SegundoPlato2"/>
+		</filled>
+
+		<field name="SegundoPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Do you prefer gluten-free Paella or stuffed eggplant?
+			</prompt>
+			<grammar src="grammar_english/segundoplato_a.jsgf"/>
+			<help>
+		Answer if you want gluten-free Paella or stuffed eggplant.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="PrimerPlato3"/>
+                <goto nextitem="PrimerPlato3"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="SegundoPlato3">
+			<assign name="segundoplato" expr="SegundoPlato3"/>
+		</filled>
+
+		<field name="SegundoPlato4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Do you prefer the lentil and quinoa salad or the guacamole?
+			</prompt>
+			<grammar src="grammar_english/segundoplato_va.jsgf"/>
+			<help>
+               	Answer if you want lentil and quinoa salad or guacamole.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="PrimerPlato4"/>
+                <goto nextitem="PrimerPlato4"/>
+            </error>
+		</field>
+		<filled mode="all" namelist="SegundoPlato4">
+			<assign name="segundoplato" expr="SegundoPlato4"/>
+		</filled>
+
+
+		<field name="Postre1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				For dessert do you want Flan or Custard?
+			</prompt>
+			<grammar src="grammar_english/postre.jsgf"/>
+			<help>
+                Answer if you want flan or Custard.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="SegundoPlato1"/>
+                <goto nextitem="SegundoPlato1"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Postre1">
+			<assign name="postre" expr="Postre1"/>
+		</filled>
+
+		<field name="Postre2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+                Do you want Orange or Banana for dessert?
+			</prompt>
+			<grammar src="grammar_english/postre_v.jsgf"/>
+			<help>
+                Answer if you want orange or banana.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="SegundoPlato2"/>
+                <goto nextitem="SegundoPlato2"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Postre2">
+			<assign name="postre" expr="Postre2"/>
+		</filled>
+
+		<field name="Postre3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Do you want apple or tangerine for dessert?
+			</prompt>
+			<grammar src="grammar_english/postre_a.jsgf"/>
+			<help>
+                Answer if you want apple or Tangerine.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="SegundoPlato3"/>
+                <goto nextitem="SegundoPlato3"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Postre3">
+			<assign name="postre" expr="Postre3"/>
+		</filled>
+
+		<field name="Postre4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				For dessert do you want Cherimoya or Pear?
+			</prompt>
+			<grammar src="grammar_english/postre_va.jsgf"/>
+			<help>
+                Answer if you want custard apple or pear.
+                <reprompt/>
+            </help>
+
+            <error>
+                It seems that there has been an error, or you have made a mistake, repeat your answer. Sorry for the inconvenience.
+                <clear namelist="SegundoPlato4"/>
+                <goto nextitem="SegundoPlato4"/>
+            </error>
+		</field>
+
+		<filled mode="all" namelist="Postre4">
+			<assign name="postre" expr="Postre4"/>
+		</filled>
+
+		<field name="Bebida">
+			<prompt>
+				As a drink you can choose between Water, Coca-Cola, Wine and Juice, which do you prefer?
+			</prompt>
+			<grammar src="grammar_english/bebida.jsgf"/>
+			<help>
+                Answer if you want Water, Coca-Cola, Wine or Juice.
+                <reprompt/>
+            </help>
+
+            <error>
+                <reprompt/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Turno Bebida">
+			<prompt>
+				Very well, you have asked for the turn of
+			</prompt>
+			<if cond="Turno == 'one'">
+				<prompt>
+					one o'clock
+				</prompt>
+			<else/>
+				<prompt>
+					three o'clock
+				</prompt>
+			</if>
+			<prompt>
+				<value expr="primerplato"/>, <value expr="segundoplato"/>, <value expr="postre"/> y <value expr="Bebida"/> de bebida
+			</prompt>
+			<goto next="#FINRESERVA"/>
+		</filled>
+		
+	</form>
+	
+	<form id="FINRESERVA">
+		<field name="TodoCorrecto">
+			<prompt>
+				Is everything correct with the reservation?
+			</prompt>
+			<grammar src="grammar_english/sino.jsgf"/>
+            <error>
+                It seems there was an error. Sorry for the inconvenience.
+                <goto next="#CONFIRMARESERVA"/>
+            </error>
+		</field>
+		<field name="confirmacion_TodoCorrecto" type="boolean" cond="0.6 > TodoCorrecto$.confidence">
+			<prompt bargein="false">
+				Sorry, I did not understand you well, you told me <value expr="TodoCorrecto"/>?
+			</prompt>
+			<catch event="nomatch noinput"> I did not understand you, answer yes or no. </catch>
+            <error>
+                It seems there was an error. Sorry for the inconvenience.
+                <goto next="#CONFIRMARESERVA"/>
+            </error>
+			<filled>
+				<if cond="!confirmacion_TodoCorrecto">
+					<clear namelist="TodoCorrecto confirmacion_TodoCorrecto"/>
+				</if>
+			</filled>
+		</field>
+
+		<filled mode="all" namelist="TodoCorrecto">
+			<if cond="TodoCorrecto == 'yes'">
+				<prompt>
+					All right, thanks for calling.
+				</prompt>
+				<disconnect/>
+			<else/>
+				<prompt>
+					Wow, can you do it again?
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			</if>
+		</filled>
+	</form>	
+</vxml>

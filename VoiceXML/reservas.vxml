@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1" xml:lang="es-ES" application="menu.xml">
+
+    <!-- Cargamos las gramáticas de error y de ayuda -->
+	<link event="help">
+
+		<grammar src="grammar_spanish/gramatica_ayuda.jsgf"/>
+
+	</link>
+
+    <link event="error">
+
+        <grammar src="grammar_spanish/gramatica_error.jsgf"/>
+
+    </link>
+	
+    <!-- Le preguntamos al usuario si quiere hacer una reserva -->
+	<form id="RESERVA">
+		<field name="Reserva">
+		   	<prompt bargein="false">
+		   		Desea hacer una reserva?
+		   	</prompt>	
+		   	<grammar src="grammar_spanish/sino.jsgf"/>
+
+            <!-- Manejo de eventos de ayuda y error -->
+			<help>
+                Responde si o no a si quieres reservar para el menu anterior.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <reprompt/>
+            </error>
+
+		</field>
+
+        <!-- Si el usuario quiere hacer una reserva pasamos al siguiente formulario y si no
+            cortamos la llamada.
+        -->
+		<filled mode="all" namelist="Reserva">
+			<if cond="Reserva == 'si'">
+				<prompt bargein="false">
+					Muy bien, necesito más información para apuntar su reserva
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			<else/>
+				<prompt bargein="false">
+					Muy bien, gracias por llamar. hasta luego.
+				</prompt>
+				<exit/>
+			</if>
+		</filled>
+	</form>
+
+    <!-- Le preguntamos al usuario el turno para la reserva -->
+	<form id="CONFIRMARESERVA">
+		<field name="Turno">
+			<prompt>
+				Desea reservar para el turno de la 1 o para el de las 3 del <value expr="dia"/>?
+			</prompt>
+			<grammar src="grammar_spanish/turno.jsgf"/>
+
+            <!-- Manejo de eventos de ayuda y error --> 
+			<help>
+                Responde el turno que quieras: el de la una o el de las tres.
+                <reprompt/>
+            </help>
+
+            <!-- Si el usuario dice que ha habido un error volvemos a preguntar si quiere hacer una reserva -->
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="Reserva"/>
+                <goto next="#RESERVA"/>
+            </error>
+		</field>
+
+
+        <!-- Pregutamos por los primeros platos según la información recogida en el módulo comer.xml
+            Si el usuario dice que ha habido un error, se le vuelve a preguntar por el turno
+        -->
+		<field name="PrimerPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Quiere comer Cocido o Lasaña?
+			</prompt>
+			<grammar src="grammar_spanish/primerplato.jsgf"/>
+			<help
+                >Responde si quieres cocido o lasaña.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+        <!-- Rellenamos el valor introducido por el usuario -->
+		<filled mode="all" namelist="PrimerPlato1">
+			<assign name="primerplato" expr="PrimerPlato1"/>
+		</filled>
+
+		<field name="PrimerPlato2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere el pan de pimenton o la trenza de masa fermentada?
+			</prompt>
+			<grammar src="grammar_spanish/primerplato_v.jsgf"/>
+
+			<help>
+                Responde si quieres pan de pimenton o trenza de masa fermentada.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato2">
+			<assign name="primerplato" expr="PrimerPlato2"/>
+		</filled>
+
+		<field name="PrimerPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere gazpacho o salmorejo?
+			</prompt>
+			<grammar src="grammar_spanish/primerplato_a.jsgf"/>
+			<help>
+                Responde si quieres gazpacho o salmorejo.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato3">
+			<assign name="primerplato" expr="PrimerPlato3"/>
+		</filled>
+
+		<field name="PrimerPlato4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere la crema de calabaza o la sopa de cebolla?
+			</prompt>
+			<grammar src="grammar_spanish/primerplato_va.jsgf"/>
+			<help
+                >Responde si quieres crema de calabaza o sopa de cebolla,
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="Turno"/>
+                <goto nextitem="Turno"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="PrimerPlato4">
+			<assign name="primerplato" expr="PrimerPlato4"/>
+		</filled>
+
+        <!-- Pregutamos por los segundos platos según la información recogida en el módulo comer.xml
+            Si el usuario dice que ha habido un error, se le vuelve a preguntar por el primer plato
+        -->
+		<field name="SegundoPlato1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere el Plato Alpujarreño o la Merluza a la plancha?
+			</prompt>
+			<grammar src="grammar_spanish/segundoplato.jsgf"/>
+			<help>
+                Responde si quieres Plato Alpujarreño o Merluza a la plancha.
+                <reprompt/>
+            </help>
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="PrimerPlato1"/>
+                <goto nextitem="PrimerPlato1"/>
+            </error>
+		</field>
+		<filled mode="all" namelist="SegundoPlato1">
+			<assign name="segundoplato" expr="SegundoPlato1"/>
+		</filled>
+
+		<field name="SegundoPlato2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Prefiere las Albondigas de tofu o el Sandwich vegetal?
+			</prompt>
+			<grammar src="grammar_spanish/segundoplato_v.jsgf"/>
+			<help>
+                Responde si quieres Albondigas de tofu o Sandwich vegetal.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="PrimerPlato2"/>
+                <goto nextitem="PrimerPlato2"/>
+            </error>
+		</field>
+
+		<filled mode="all" namelist="SegundoPlato2">
+			<assign name="segundoplato" expr="SegundoPlato2"/>
+		</filled>
+
+		<field name="SegundoPlato3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere la Paella sin gluten o la berenjena rellena?
+			</prompt>
+			<grammar src="grammar_spanish/segundoplato_a.jsgf"/>
+			<help>
+                Responde si quieres Paella sin gluten o berenjena rellena.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="PrimerPlato3"/>
+                <goto nextitem="PrimerPlato3"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="SegundoPlato3">
+			<assign name="segundoplato" expr="SegundoPlato3"/>
+		</filled>
+
+		<field name="SegundoPlato4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Prefiere la ensalada de lentejas y quinoa o el guacamole?
+			</prompt>
+			<grammar src="grammar_spanish/segundoplato_va.jsgf"/>
+			<help>
+                Responde si quieres ensalada de lentejas y quinoa o guacamole.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="PrimerPlato4"/>
+                <goto nextitem="PrimerPlato4"/>
+            </error>
+		</field>
+		<filled mode="all" namelist="SegundoPlato4">
+			<assign name="segundoplato" expr="SegundoPlato4"/>
+		</filled>
+
+
+		<field name="Postre1" cond="(vegi == 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Para el postre quiere Flan o Natillas?
+			</prompt>
+			<grammar src="grammar_spanish/postre.jsgf"/>
+			<help>
+                Responde si quieres flan o Natillas.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="SegundoPlato1"/>
+                <goto nextitem="SegundoPlato1"/>
+            </error>
+
+		</field>
+
+        <!-- Pregutamos por los postres según la información recogida en el módulo comer.xml
+            Si el usuario dice que ha habido un error, se le vuelve a preguntar por el segundo plato
+        -->
+		<filled mode="all" namelist="Postre1">
+			<assign name="postre" expr="Postre1"/>
+		</filled>
+
+		<field name="Postre2" cond="(vegi != 'no') &amp;&amp; (alergi == 'no') ">
+			<prompt>
+				Para el postre quiere Naranja o Platano?
+			</prompt>
+			<grammar src="grammar_spanish/postre_v.jsgf"/>
+			<help>
+                Responde si quieres naranja o Platano.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="SegundoPlato2"/>
+                <goto nextitem="SegundoPlato2"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Postre2">
+			<assign name="postre" expr="Postre2"/>
+		</filled>
+
+		<field name="Postre3" cond="(vegi == 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Para el postre quiere Manzana o Mandarina?
+			</prompt>
+			<grammar src="grammar_spanish/postre_a.jsgf"/>
+			<help>
+                Responde si quieres manzana o Mandarina.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="SegundoPlato3"/>
+                <goto nextitem="SegundoPlato3"/>
+            </error>
+
+		</field>
+
+		<filled mode="all" namelist="Postre3">
+			<assign name="postre" expr="Postre3"/>
+		</filled>
+
+		<field name="Postre4" cond="(vegi != 'no') &amp;&amp; (alergi != 'no') ">
+			<prompt>
+				Para el postre quiere Chirimoya o Pera?
+			</prompt>
+			<grammar src="grammar_spanish/postre_va.jsgf"/>
+			<help>
+                Responde si quieres chirimoya o Pera.
+                <reprompt/>
+            </help>
+
+            <error>
+                Parece que ha habido un error, o se ha equivocado, repita su respuesta. Disculpe las molestias.
+                <clear namelist="SegundoPlato4"/>
+                <goto nextitem="SegundoPlato4"/>
+            </error>
+		</field>
+
+		<filled mode="all" namelist="Postre4">
+			<assign name="postre" expr="Postre4"/>
+		</filled>
+
+        <!-- Pregutamos por la bebida según la información recogida en el módulo comer.xml
+            Si el usuario dice que ha habido un error, se le vuelve a preguntar por la bebida
+        -->
+		<field name="Bebida">
+			<prompt>
+				De bebida puede elegir entre Agua, Coca-Cola, Vino y Zumo, que prefiere?
+			</prompt>
+			<grammar src="grammar_spanish/bebida.jsgf"/>
+			<help>
+                Responde si quieres Agua, Coca-Cola, Vino o Zumo.
+                <reprompt/>
+            </help>
+
+            <error>
+                <reprompt/>
+            </error>
+
+		</field>
+
+        <!-- Confirmamos que la información que hemos obtenido del usuario es correcta -->
+		<filled mode="all" namelist="Turno Bebida">
+			<prompt>
+				Muy bien, usted ha pedido para el turno de
+			</prompt>
+			<if cond="Turno == 'una'">
+				<prompt>
+					la una
+				</prompt>
+			<else/>
+				<prompt>
+					las tres
+				</prompt>
+			</if>
+			<prompt>
+				<value expr="primerplato"/>, <value expr="segundoplato"/>, <value expr="postre"/> y <value expr="Bebida"/> de bebida
+			</prompt>
+			<goto next="#FINRESERVA"/>
+		</filled>
+		
+	</form>
+	
+	<form id="FINRESERVA">
+		<field name="TodoCorrecto">
+			<prompt>
+				Esta todo correcto con la reserva?
+			</prompt>
+			<grammar src="grammar_spanish/sino.jsgf"/>
+            <error>
+                Parece que ha habido un error. Disculpe las molestias.
+                <goto next="#CONFIRMARESERVA"/>
+            </error>
+		</field>
+
+        <!-- Utilizamos valores de confianza para asegurarnos de que entendemos la respuesta del usuario -->
+		<field name="confirmacion_TodoCorrecto" type="boolean" cond="0.6 > TodoCorrecto$.confidence">
+			<prompt bargein="false">
+				Perdona, no te he entendido bien, me has dicho <value expr="TodoCorrecto"/>?
+			</prompt>
+			<catch event="nomatch noinput"> No te he entendido, responde si o no. </catch>
+            <error>
+                Parece que ha habido un error. Disculpe las molestias.
+                <goto next="#CONFIRMARESERVA"/>
+            </error>
+			<filled>
+				<if cond="!confirmacion_TodoCorrecto">
+					<clear namelist="TodoCorrecto confirmacion_TodoCorrecto"/>
+				</if>
+			</filled>
+		</field>
+
+        <!-- Si el usuario responde que toda la información es correcra se hace la reserva y se corta la llamada 
+            y si no se vuelve a pedir toda la información de este archivo
+        -->
+		<filled mode="all" namelist="TodoCorrecto">
+			<if cond="TodoCorrecto == 'si'">
+				<prompt>
+					Muy bien, gracias por llamar.
+				</prompt>
+				<disconnect/>
+			<else/>
+				<prompt>
+					Vaya, puede volver a repetir?
+				</prompt>
+				<goto next="#CONFIRMARESERVA"/>
+			</if>
+		</filled>
+	</form>	
+</vxml>

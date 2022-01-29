@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar alergias;
+
+public <alergias> = [si al] huevo | [si al] gluten | [si al] lactosa | no | si;

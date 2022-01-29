@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar gramatica_ayuda;
+
+public <gramatica_ayuda> = I dom't undertand | help | can I have some help | I need help | Explain me;

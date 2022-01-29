@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar turno;
+
+public <turno> = [turno de la] una | [turno de las] tres;

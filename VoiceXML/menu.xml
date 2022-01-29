@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<vxml version="2.1" xml:lang="es-ES">
+
+<script src="scripts/greeting.js"/>
+
+	<!-- Este es el archivo root. Todas las variables que se declaren aqui
+
+		 se pueden usar en todos sus subficheros. -->
+
+	<var name="opcion"/>
+
+	<var name="dia"/>
+
+	<var name="vegi"/>
+
+	<var name="alergi"/>
+
+	
+
+	<var name="primerplato" asign="undefined"/>
+
+	<var name="segundoplato" asign="undefined"/>
+
+	<var name="postre" asign="undefined"/>
+
+	<var name="bebida" asign="undefined"/>
+
+ 
+
+	<!-- Aqui termina la declaracion de variables.-->
+
+  	<catch event="nomatch noinput" count ="3">
+
+		<exit/>
+
+  	</catch>
+
+	<menu>
+		<prompt><audio src="musica-espera.wav"/></prompt>
+
+		<prompt><value expr="greetEsp()"/> . Bienvenido al servicio de comedores universitarios de UGR-Buddy. </prompt>
+    		<prompt xml:lang="en-US"><value expr="greetEng()"/> . Welcome to the university cafeteria service from UGR-Buddy. </prompt>
+
+		<prompt>Para continuar con la llamada en español pulse 1 o diga Español</prompt>
+    		<prompt xml:lang="en-US">To continue the call in English press 2 or say English </prompt>
+
+		<choice dtmf="1" next="comer.xml">Español</choice>
+
+      		<choice dtmf="2" next="comer_eng.xml">English </choice>
+
+	</menu>
+
+	
+
+</vxml>

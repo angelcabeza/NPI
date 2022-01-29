@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<vxml version="2.1" xml:lang="en-US" application="menu.xml">
+	
+	<link event="help">
+
+		<grammar src="grammar_english/gramatica_ayuda.jsgf"/>
+
+	</link>
+
+
+
+    	<link event="error">
+
+       		<grammar src="grammar_english/gramatica_error.jsgf"/>
+
+    	</link>
+	
+
+	
+
+	<link next="\UGRBUDDY">
+
+	</link>
+
+
+
+	<script src="http://webhosting.voxeo.net/207932/www/comprobar_vacaciones_eng.js" />
+
+
+
+	<form id="UGRBUDDY">
+
+
+		<block>
+
+			<prompt bargein="false">
+
+				You have selected the option: English.
+
+			</prompt>
+
+			<goto nextitem="DiaSemana"/>
+
+		</block>
+
+
+
+		<field name="DiaSemana">
+
+			<var name="esVacaciones" expr="isHolydays();"/>
+
+
+
+			<if cond="esVacaciones != ''">
+
+				<prompt bargein="false"> <value expr="esVacaciones"/> </prompt>
+
+				<disconnect/>
+
+			</if>
+
+
+
+			<prompt bargein="true">
+
+				What day do you want to come to eat?
+
+			</prompt>
+
+			<grammar src="grammar_english/dias.jsgf"/>
+
+
+
+			<help>
+
+				At UGR Buddy, we can tell you the cafeteria menu and you can make a reservation if you wish.
+
+				<reprompt/>
+
+			</help>
+
+
+
+			<error>
+
+				It seems there has been an error, sorry for the inconvenience.
+				<reprompt/>
+
+			</error>
+
+
+
+			<filled>
+
+				<if cond="DiaSemana == 'Saturday'">
+
+					<prompt bargein="false">
+						Sorry, Saturday is <emp>closed</emp>
+					</prompt>
+
+					<clear namelist="DiaSemana"/>
+
+				</if>
+
+				<if cond="DiaSemana == 'Sunday'">
+
+					<prompt bargein="false">
+						Sorry, Sunday is <emp>closed</emp>.
+					</prompt>
+
+					<clear namelist="DiaSemana"/>
+
+				</if>
+
+			</filled>
+
+		</field>
+
+
+
+		<field name="confirmacion_dia" type="boolean" cond="0.6 > DiaSemana$.confidence">
+
+			<prompt bargein="false">
+
+				Sorry, I did not understand you well, did you tell me the day <value expr="DiaSemana"/>?
+
+			</prompt>
+
+			<catch event="nomatch noinput"> I have not understood you well, please answer yes or no. </catch>
+
+			<nomatch count="3">
+
+				<prompt bargein="false">
+
+					I'm so sorry, but I don't understand what you're saying, let's start over.
+
+				</prompt>
+
+				<clear namelist="DiaSemana confirmacion_dia"/>
+
+			</nomatch>
+
+            <error>
+
+                It seems there was an error. Sorry for the inconvenience.
+
+                <clear namelist="DiaSemana confirmacion_dia"/>
+
+            </error>
+
+
+
+			<filled>
+
+				<if cond="!confirmacion_dia">
+
+					<clear namelist="DiaSemana confirmacion_dia"/>
+
+				</if>
+
+			</filled>
+
+
+
+		</field>
+
+
+
+		<filled mode="all" namelist="DiaSemana">
+
+			<assign name="dia" expr="DiaSemana"/>
+
+		</filled>
+
+
+
+		<field name="Vegetariano">
+
+			<prompt bargein="true">
+				OK, you have seleccted the menu for <value expr="dia"/>. Do you want to know the vegetarian option?
+			</prompt>
+
+			<grammar src="grammar_english/vegetariano.jsgf"/>
+
+			<help>
+
+				You have to answer yes or no.
+
+				<reprompt/>
+
+			</help>
+
+
+
+            <error>
+
+                It seems that there has been an error or you have made a mistake. Please repeat your answer and sorry for the inconvenience.
+
+                <clear namelist="DiaSemana"/>
+
+                <goto nextitem="DiaSemana"/>
+
+            </error>
+
+
+
+		</field>
+
+
+
+		<filled mode="all" namelist="Vegetariano">
+
+			<assign name="vegi" expr="Vegetariano"/>
+
+		</filled>
+
+
+
+		<field name="Alergias">
+
+			<prompt bargein="true">
+
+				Are you allergic to eggs, gluten or lactose?
+
+			</prompt>
+
+			<grammar src="grammar_english/alergias.jsgf"/>
+
+			<help>
+
+				Please, answer: yes, no or the type of allergy.
+
+				<reprompt/>
+
+			</help>
+
+
+
+            <error>
+
+                It seems that there has been an error or you have made a mistake. Please repeat your answer and sorry for the inconvenience.
+
+                <clear namelist="Vegetariano"/>
+
+                <goto nextitem="Vegetariano"/>
+
+            </error>
+
+
+
+		</field>
+
+
+
+		<filled mode="all" namelist="Alergias">
+
+			<assign name="alergi" expr="Alergias"/>
+
+		</filled>
+
+		
+
+		<field name="DiaVegAlergiaCorrecto">
+
+			<prompt>
+
+				Well, you told me you want to know the menu for <value expr="DiaSemana"/> , you said <value expr="vegi"/> to the vegetarian option and <value expr="alergi"/> to the question of allergies.
+
+				Everything is correct?
+
+			</prompt>
+
+			<grammar src="grammar_english/sino.jsgf"/>
+
+            <error>
+
+                <prompt>
+			        It seems that there has been an error or you have made a mistake. Please let's start again and sorry for the inconvenience. 
+		        </prompt>
+
+				<clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+            </error>
+
+		</field>
+
+
+
+		<field name="confirmacion_DiaVegAlergiaCorrecto" type="boolean" cond="0.6 > DiaVegAlergiaCorrecto$.confidence">
+
+			<prompt bargein="false">
+
+				Sorry, I did not understand you well, you said <value expr="DiaVegAlergiaCorrecto"/>?
+
+			</prompt>
+
+			<catch event="nomatch noinput"> I have not understood you. Please, answer yes or no. </catch>
+
+            <error>
+
+                It seems there was an error. Sorry for the inconvenience.
+
+                <clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+            </error>
+
+			<filled>
+
+				<if cond="!confirmacion_DiaVegAlergiaCorrecto">
+
+					<clear namelist="DiaVegAlergiaCorrecto confirmacion_DiaVegAlergiaCorrecto"/>
+
+				</if>
+
+			</filled>
+
+		</field>
+
+		
+
+		<filled mode="all" namelist="DiaVegAlergiaCorrecto">
+
+			<if cond="DiaVegAlergiaCorrecto == 'no'">
+
+				<prompt>
+
+					Oh, can you repeat it then?
+
+				</prompt>
+
+				<clear namelist="DiaSemana"/>
+
+				<clear namelist="Vegetariano"/>
+
+				<clear namelist="Alergias"/>
+
+				<clear namelist="DiaVegAlergiaCorrecto"/>
+
+			</if>
+
+		</filled>
+
+
+
+		<filled mode="all" namelist="DiaSemana Vegetariano Alergias DiaVegAlergiaCorrecto">
+
+			<if cond="Vegetariano == 'no'">
+
+				<if cond="Alergias == 'no'">
+
+					<prompt bargein="false">
+
+						For <value expr="DiaSemana"/> the non-vegetarian and allergy-free menu is as follows: First course: Cooked or Lasagna, Second course: Alpujarreño or grilled hake and for dessert: Flan or Custard.
+
+					</prompt>
+
+				<else/>
+
+					<prompt bargein="false">
+
+						For <value expr="DiaSemana"/> the non-vegetarian and allergy-friendly menu is as follows: First course: paprika bread or sourdough braid, Second course: Paella (gluten-free) or eggplant stuffed with meat, and for dessert: Orange or Banana.
+					</prompt>
+
+				</if>
+
+			<else/>
+
+				<if cond="Alergias == 'no'">
+
+					<prompt bargein="false">
+
+						For <value expr="DiaSemana"/> the vegetarian and allergy-free menu is as follows: First course: Gazpacho or Salmorejo Second course: Tofu meatballs or vegetable sandwich, and for dessert: Apple or Tangerine.
+
+					</prompt>
+
+				<else/>
+
+					<prompt bargein="false">
+
+						For <value expr="DiaSemana"/> the vegetarian and allergy-friendly menu is as follows: First course: Cream of pumpkin (without milk) or onion soup, Second course: lentil or quinoa salad with guacamole garnish, and for dessert: Custard apple or Pear.
+
+					</prompt>
+
+				</if>
+
+			</if>
+
+			<!--<goto next="#RESERVA"/>-->
+
+			<goto next="reservas_eng.vxml#RESERVA"/>
+
+		</filled>
+
+	</form>
+
+</vxml>

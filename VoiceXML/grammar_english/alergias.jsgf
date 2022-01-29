@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar alergias;
+
+public <alergias> = [yes, I am alergic to] eggs | [yes, I am alergic to] gluten | [yes, I am alergic to] lactose | yes | no;

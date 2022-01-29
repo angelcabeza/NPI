@@ -1,0 +1,5 @@
+#JSGF V1.0;
+
+grammar turno;
+
+public <turno> = [turn of the] one [o'clock] | [turn of] three [o'clock];

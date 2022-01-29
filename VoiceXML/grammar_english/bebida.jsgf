@@ -1,0 +1,9 @@
+#JSGF V1.0;
+
+grammar bebida;
+
+public <bebida> = [<deseo>] [<comida> {this.Bebida=$comida}];
+
+<deseo> = I want | I would like | I prefer;
+
+<comida> = water| coke | wine | juice;

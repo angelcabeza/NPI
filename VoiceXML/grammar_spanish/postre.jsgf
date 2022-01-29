@@ -1,0 +1,9 @@
+#JSGF V1.0;
+
+grammar postre;
+
+public <postre> = [<deseo>] [<comida> {this.Postre1=$comida}];
+
+<deseo> = quiero | me gustaria | [yo] necesito | [yo] queria;
+
+<comida> = flan | natillas;
