@@ -26,11 +26,6 @@
 	</link>
 
 
-
-	<script src="http://webhosting.voxeo.net/207932/www/comprobar_vacaciones.js" />
-
-
-
 	<form id="UGRBUDDY">
 
         <!-- Informamos del idioma seleccionado -->
@@ -50,21 +45,7 @@
 
 		<field name="DiaSemana">
 
-            <!-- Si estamos de vacaciones informamos al usuario y salimos -->
-			<var name="esVacaciones" expr="isHolydays();"/>
-
-
-
-			<if cond="esVacaciones != ''">
-
-				<prompt bargein="false"> <value expr="esVacaciones"/> </prompt>
-
-				<disconnect/>
-
-			</if>
-
-
-            <!-- Si no le preguntamos al usuario que día quiere venir a comer-->
+            <!-- Le preguntamos al usuario que día quiere venir a comer-->
 			<prompt bargein="true">
 
 				¿Qué día quieres venir a comer?
