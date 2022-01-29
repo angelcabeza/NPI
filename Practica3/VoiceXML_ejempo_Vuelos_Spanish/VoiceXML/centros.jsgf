@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar centros;
-
-public <centros>= escuela de informatica | facultad de bellas artes | facultad de ciencias | salir;

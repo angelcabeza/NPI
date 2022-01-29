@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar info_centros;
-
-public <info_centros>= direccion | telefono | delegacion ;

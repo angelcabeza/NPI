@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar dias;
-
-public <dias> = lunes | martes | miercoles | jueves | viernes;

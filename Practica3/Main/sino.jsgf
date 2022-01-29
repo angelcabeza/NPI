@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar reserva;
-
-public <reserva> = si | no;

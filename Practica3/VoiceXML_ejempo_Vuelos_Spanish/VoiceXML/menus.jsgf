@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar menus;
-
-public <menus>=  estandar de comida | comida | comer | estandar de cena | cena | cenar | vegetariano | vegano | celiaco;

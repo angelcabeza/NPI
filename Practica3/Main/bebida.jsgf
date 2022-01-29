@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar bebida;
-
-public <bebida> = agua | cocacola | vino | zumo;

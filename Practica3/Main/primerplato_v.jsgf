@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar primerplato_v;
-
-public <primerplato_v> = pan | trenza;

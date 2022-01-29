@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar primerplato;
-
-public <primerplato> = cocido | lasaña;

@@ -1,5 +1,0 @@
-#JSGF V1.0;
-
-grammar opciones_grados;
-
-public <opciones_grados>= facultad | presentacion;
